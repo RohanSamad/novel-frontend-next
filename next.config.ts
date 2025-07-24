@@ -5,19 +5,27 @@ const nextConfig: NextConfig = {
   compress: true,
 
   images: {
-    domains: ['development.mitprogrammer.com'],
-    formats: ['image/webp', 'image/avif'], // ✅ Use modern image formats
+    domains: ["development.mitprogrammer.com"],
+    formats: ["image/webp", "image/avif"],
   },
 
-  // ✅ Optional: Add headers to improve caching
   async headers() {
     return [
+      {
+        source: "/_next/static/(.*)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
       {
         source: "/(.*)",
         headers: [
           {
             key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
+            value: "public, max-age=86400, stale-while-revalidate=59",
           },
         ],
       },
