@@ -93,13 +93,14 @@ const NovelHeader = memo(
         <div className="absolute inset-0">
           <Image
             src={novel.cover_image_url}
-            alt=""
+            alt="Background cover"
             fill
             className="object-cover blur-sm opacity-20"
             sizes="100vw"
-            priority
-            fetchPriority="high"
-            quality={75}
+            priority={false}
+            fetchPriority="low"
+            quality={35}
+            placeholder="empty" 
           />
         </div>
 
