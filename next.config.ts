@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-   images: {
+  reactStrictMode: true,
+  compress: true,
+  images: {
     domains: ['development.mitprogrammer.com'],
   },
 };

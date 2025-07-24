@@ -25,6 +25,14 @@ export interface Novel {
   created_at: string;
   updated_at: string;
 }
+export interface Chapter {
+  id: number;
+  title: string;
+  chapter_number: number;
+  novel_title: string;
+  created_at: string;
+}
+
 
 interface NovelsState {
   novels: Novel[];

@@ -1,8 +1,8 @@
 "use client";
-import React from "react";
-import Link from "next/link";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Novel } from "../../store/slices/novelsSlice";
-import { BookOpen, Clock, AlertCircle, Check } from "lucide-react";
+import { BookOpen, Clock, AlertCircle, Check,Loader} from "lucide-react";
 import Image from "next/image";
 
 interface NovelCardProps {
@@ -21,6 +21,8 @@ const NovelCard: React.FC<NovelCardProps> = ({
   onSelect,
 }) => {
   const [imageError, setImageError] = React.useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const router = useRouter();
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -50,22 +52,35 @@ const NovelCard: React.FC<NovelCardProps> = ({
     }
   };
 
+  const handleNavigation = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsNavigating(true);
+    
+    try {
+      const novelUrl = `/novel/${novel.title.trim().replace(/\s+/g, "-")}`;
+      await router.push(novelUrl);
+    } catch (error) {
+      setIsNavigating(false);
+      console.error("Navigation error:", error);
+    }
+  };
+
   const sizeClasses = {
     small: {
       card: "w-full max-w-[180px]",
-      imageContainer: "pb-[150%]", // 2:3 aspect ratio
+      imageContainer: "pb-[150%]",
       title: "text-sm",
       content: "p-2",
     },
     medium: {
       card: "w-full max-w-[250px]",
-      imageContainer: "pb-[150%]", // 2:3 aspect ratio
+      imageContainer: "pb-[150%]",
       title: "text-lg",
       content: "p-3",
     },
     large: {
       card: "w-full max-w-[300px]",
-      imageContainer: "pb-[150%]", // 2:3 aspect ratio
+      imageContainer: "pb-[150%]",
       title: "text-xl",
       content: "p-4",
     },
@@ -78,15 +93,15 @@ const NovelCard: React.FC<NovelCardProps> = ({
       className={` 
       ${classes.card} 
       bg-white rounded-lg shadow-md overflow-hidden 
-      transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg
+      transition-all duration-300 hover:-translate-y-1 hover:shadow-lg
       flex flex-col
-      ${selectable ? "cursor-pointer" : ""}
+      ${selectable ? "cursor-pointer" : "cursor-pointer"}
       ${selected ? "ring-2 ring-primary-500" : ""}
+      ${isNavigating ? "opacity-75 scale-95" : ""}
       relative
     `}
     >
       <div className="relative w-full">
-        {/* Container with fixed aspect ratio */}
         <div className={`${classes.imageContainer} relative`}>
           {imageError ? (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
@@ -94,12 +109,14 @@ const NovelCard: React.FC<NovelCardProps> = ({
             </div>
           ) : (
             <Image
-              src={imageError ? "/fallback-image.jpg" : novel.cover_image_url}
+              src={novel.cover_image_url}
               alt={`Cover for ${novel.title}`}
               className="absolute inset-0 w-full h-full object-cover"
               fill
               onError={() => setImageError(true)}
-              loading="lazy"
+              priority={false} // Don't priority load all images
+              loading="lazy" // Lazy load for better performance
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
             />
           )}
           <div className="absolute top-2 right-2">
@@ -112,9 +129,13 @@ const NovelCard: React.FC<NovelCardProps> = ({
               </div>
             </div>
           )}
+          {isNavigating && (
+            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+              <Loader className="w-8 h-8 text-white animate-spin" />
+            </div>
+          )}
         </div>
       </div>
-
       <div className={`${classes.content} flex-grow flex flex-col bg-white`}>
         <h3
           className={`${classes.title} font-serif font-bold text-primary-900 line-clamp-1`}
@@ -122,9 +143,8 @@ const NovelCard: React.FC<NovelCardProps> = ({
           {novel.title}
         </h3>
         <p className="text-sm text-gray-600 mt-1">by {novel.author.name}</p>
-
         <div className="mt-2 flex flex-wrap gap-1">
-          {novel.genres?.map((genre) => (
+          {novel.genres?.slice(0, 3).map((genre) => ( // Limit genres displayed
             <span
               key={genre.id}
               className="inline-block bg-primary-100 text-primary-800 rounded-full px-2 py-0.5 text-xs"
@@ -132,6 +152,9 @@ const NovelCard: React.FC<NovelCardProps> = ({
               {genre.name}
             </span>
           ))}
+          {novel.genres && novel.genres.length > 3 && (
+            <span className="text-xs text-gray-500">+{novel.genres.length - 3}</span>
+          )}
         </div>
       </div>
     </div>
@@ -146,18 +169,9 @@ const NovelCard: React.FC<NovelCardProps> = ({
   }
 
   return (
-    <Link
-      href={{
-        pathname: `/novel/[slug]`,
-        query: {
-          slug: novel.title.trim().replace(/\s+/g, "-"),
-          id: novel.id, // Pass minimal required data
-        },
-      }}
-      as={`/novel/${novel.title.trim().replace(/\s+/g, "-")}`}
-    >
+    <div onClick={handleNavigation}>
       <CardContent />
-    </Link>
+    </div>
   );
 };
 

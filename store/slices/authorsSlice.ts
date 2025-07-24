@@ -47,7 +47,7 @@ export const fetchAuthors = createAsyncThunk(
 
       const authors = response.data.data; // Expect { data: [{ id, name, bio, avatar_url, created_at, updated_at }] }
 
-      return authors.map((author: any) => ({
+      return authors.map((author : any) => ({
         id: author.id.toString(), // Convert id to string to match Author interface
         name: author.name,
         bio: author.bio,

@@ -1,69 +1,79 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "../../hooks/redux";
 import { fetchFeaturedNovels } from "../../store/slices/featuredSlice";
-import { fetchNovels } from "../../store/slices/novelsSlice";
 import Link from "next/link";
 import Button from "../ui/Button";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import Image from "next/image";
+import { Novel } from "../../store/slices/novelsSlice";
 
-const FeaturedNovelCarousel: React.FC = () => {
+interface FeaturedNovelCarouselProps {
+  novels?: Novel[]; 
+}
+
+const FeaturedNovelCarousel: React.FC<FeaturedNovelCarouselProps> = ({ 
+  novels = [] 
+}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [coverImageError, setCoverImageError] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [slideDirection, setSlideDirection] = useState<"left" | "right">(
-    "right"
-  );
+  const [slideDirection, setSlideDirection] = useState<"left" | "right">("right");
+  
   const dispatch = useAppDispatch();
-  const { featuredNovels, status, error } = useAppSelector(
-    (state) => state.featured
-  );
-  const novelsStatus = useAppSelector((state) => state.novels.status);
+  const { featuredNovels, status, error } = useAppSelector((state) => state.featured);
+
+  // const displayNovels = featuredNovels.length > 0 
+  //   ? featuredNovels 
+  //   : novels.slice(0, 5).map(novel => ({ novel })); 
+  const displayNovels = useMemo(() => {
+  return featuredNovels.length > 0
+    ? featuredNovels
+    : novels.slice(0, 5).map((novel) => ({ novel }));
+}, [featuredNovels, novels]);
+
 
   useEffect(() => {
-    // First make sure we have novels data
-    if (novelsStatus === "idle") {
-      dispatch(fetchNovels());
-    }
-    // Then fetch featured novels data
-    if (status === "idle") {
+    if (novels.length === 0 && status === "idle") {
       dispatch(fetchFeaturedNovels());
     }
-  }, [dispatch, status, novelsStatus]);
+  }, [dispatch, status, novels.length]);
 
   const nextSlide = () => {
-    if (isAnimating || featuredNovels.length === 0) return;
+    if (isAnimating || displayNovels.length === 0) return;
     setIsAnimating(true);
     setSlideDirection("right");
     setCurrentIndex((prevIndex) =>
-      prevIndex === featuredNovels.length - 1 ? 0 : prevIndex + 1
+      prevIndex === displayNovels.length - 1 ? 0 : prevIndex + 1
     );
     setTimeout(() => setIsAnimating(false), 500);
   };
 
   const prevSlide = () => {
-    if (isAnimating || featuredNovels.length === 0) return;
+    if (isAnimating || displayNovels.length === 0) return;
     setIsAnimating(true);
     setSlideDirection("left");
     setCurrentIndex((prevIndex) =>
-      prevIndex === 0 ? featuredNovels.length - 1 : prevIndex - 1
+      prevIndex === 0 ? displayNovels.length - 1 : prevIndex - 1
     );
     setTimeout(() => setIsAnimating(false), 500);
   };
 
   useEffect(() => {
     const interval = setInterval(() => {
-      if (featuredNovels.length > 1) {
+      if (displayNovels.length > 1) {
         nextSlide();
       }
     }, 6000);
 
     return () => clearInterval(interval);
-  }, [featuredNovels.length, isAnimating]);
+  }, [displayNovels.length, isAnimating]);
 
-  if (status === "loading" || novelsStatus === "loading") {
+  const isLoading = novels.length === 0 && status === "loading";
+  const hasError = novels.length === 0 && error;
+
+  if (isLoading) {
     return (
       <div className="w-full h-96 flex justify-center items-center bg-gray-100 rounded-lg">
         <LoadingSpinner size="large" />
@@ -71,7 +81,7 @@ const FeaturedNovelCarousel: React.FC = () => {
     );
   }
 
-  if (error || featuredNovels.length === 0) {
+  if (hasError || displayNovels.length === 0) {
     return (
       <div className="w-full h-96 flex justify-center items-center bg-gray-100 rounded-lg">
         <p className="text-gray-500">No featured novels available</p>
@@ -79,27 +89,35 @@ const FeaturedNovelCarousel: React.FC = () => {
     );
   }
 
-  const currentNovel = featuredNovels[currentIndex]?.novel;
+  const currentNovel = displayNovels[currentIndex]?.novel;
 
   if (!currentNovel) return null;
 
   return (
     <div className="relative w-full h-96 overflow-hidden rounded-lg shadow-md">
       <div
-        className={`absolute inset-0 bg-cover bg-center transition-transform duration-500 ease-in-out ${
+        className={`absolute inset-0 transition-transform duration-500 ease-in-out ${
           isAnimating
             ? slideDirection === "right"
               ? "-translate-x-full"
               : "translate-x-full"
             : "translate-x-0"
-        } ${coverImageError ? "bg-primary-900" : ""}`}
-        style={
-          coverImageError
-            ? {}
-            : { backgroundImage: `url(${currentNovel?.cover_image_url})` }
-        }
+        }`}
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-primary-900/80 to-transparent"></div>
+        {coverImageError ? (
+          <div className="w-full h-full bg-primary-900" />
+        ) : (
+          <Image
+            src={currentNovel?.cover_image_url || ""}
+            alt={currentNovel?.title || "Cover image"}
+            fill
+            className="object-cover"
+            priority
+            fetchPriority="high"
+            onError={() => setCoverImageError(true)}
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-r from-primary-900/80 to-transparent" />
       </div>
 
       <div
@@ -112,13 +130,13 @@ const FeaturedNovelCarousel: React.FC = () => {
         }`}
         style={{
           backgroundImage: `url(${
-            featuredNovels[
+            displayNovels[
               slideDirection === "right"
-                ? currentIndex === featuredNovels.length - 1
+                ? currentIndex === displayNovels.length - 1
                   ? 0
                   : currentIndex + 1
                 : currentIndex === 0
-                ? featuredNovels.length - 1
+                ? displayNovels.length - 1
                 : currentIndex - 1
             ]?.novel?.cover_image_url
           })`,
@@ -136,17 +154,11 @@ const FeaturedNovelCarousel: React.FC = () => {
             <h2 className="text-3xl md:text-4xl font-serif font-bold">
               {currentNovel.title}
             </h2>
-            <p className="text-white/80">by {currentNovel.author.name}</p>
+            <p className="text-white/80">by {currentNovel.author?.name || 'Unknown Author'}</p>
             <p className="line-clamp-3">{currentNovel.synopsis}</p>
             <Link
-              href={{
-                pathname: `/novel/${currentNovel.title
-                  .trim()
-                  .replace(/\s+/g, "-")}`,
-                query: { novelId: currentNovel.id }, // or whatever fields you need
-              }}
+              href={`/novel/${currentNovel.title.trim().replace(/\s+/g, "-")}`}
             >
-              {" "}
               <Button variant="accent" size="medium">
                 Read Now
               </Button>
@@ -162,19 +174,13 @@ const FeaturedNovelCarousel: React.FC = () => {
               ) : (
                 <div className="relative w-full h-full">
                   <Image
-                    src={
-                      coverImageError
-                        ? "/fallback-cover.jpg"
-                        : currentNovel?.cover_image_url || "/fallback-cover.jpg"
-                    }
+                    src={currentNovel?.cover_image_url || "/fallback-cover.jpg"}
                     alt={currentNovel?.title || "Novel cover"}
                     fill
                     className="object-cover"
-                    unoptimized={
-                      !currentNovel?.cover_image_url?.startsWith("http")
-                    }
                     onError={() => setCoverImageError(true)}
-                    loading="lazy"
+                    priority
+                    fetchPriority="high"
                   />
                 </div>
               )}
@@ -202,7 +208,7 @@ const FeaturedNovelCarousel: React.FC = () => {
       </button>
 
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
-        {featuredNovels.map((_, index) => (
+        {displayNovels.map((_, index) => (
           <button
             key={index}
             onClick={() => {

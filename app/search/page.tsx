@@ -1,15 +1,4 @@
-// import SearchResultsPage from "@/pages/SearchResultsPage";
 
-// interface SearchPageProps {
-//   searchParams: { q?: string };
-// }
-
-// const Page = ({ searchParams }: SearchPageProps) => {
-//   const query = searchParams.q || "";
-//   return <SearchResultsPage query={query} />;
-// };
-
-// export default Page;
 
 
 import SearchResultsPage from "@/components/pages/SearchResultsPage";

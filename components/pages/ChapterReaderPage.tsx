@@ -2,10 +2,10 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAppSelector } from "@/hooks/redux";
-import { ArrowLeft, Moon, Sun, BookOpen, PlayCircle } from "lucide-react";
 import AudioPlayer from "@/components/chapter/AudioPlayer";
 import ChapterNavigation from "@/components/chapter/ChapterNavigation";
 import ChapterSelector from "@/components/chapter/ChapterSelector";
+import { ArrowLeft, BookOpen, Moon, PlayCircle, Sun } from "lucide-react";
 
 interface ChapterPreferences {
   theme: "light" | "dark";
@@ -19,9 +19,6 @@ interface Novel {
   [key: string]: unknown;
 }
 
-// Either import this from your store:
-// import type { Chapter } from "@/store/slices/chaptersSlice";
-// Or define it to match:
 interface Chapter {
   id: string;
   novel_id: string;
@@ -111,7 +108,6 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
     }));
   };
 
-  // Same handleChapterEnd logic as your original code
   const handleChapterEnd = () => {
     if (!preferences.autoPlayEnabled) return;
     const currentIndex = chapters.findIndex(

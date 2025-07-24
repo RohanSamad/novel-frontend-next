@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect } from "react";
@@ -9,7 +8,19 @@ import { formatDistanceToNow } from "date-fns";
 import { Clock } from "lucide-react";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
-const RecentUpdates: React.FC = () => {
+interface RecentUpdatesProps {
+  initialRecentChapters?: {
+    id: number;
+    title: string;
+    chapter_number: number;
+    novel_title: string;
+    created_at: string;
+  }[];
+}
+
+const RecentUpdates: React.FC<RecentUpdatesProps> = ({
+  initialRecentChapters = [],
+}) => {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { recentChapters, status, error } = useAppSelector(
@@ -17,12 +28,18 @@ const RecentUpdates: React.FC = () => {
   );
 
   useEffect(() => {
-    if (status === "idle") {
+    if (initialRecentChapters.length === 0 && status === "idle") {
       dispatch(fetchRecentChapters());
     }
-  }, [dispatch, status]);
+  }, [dispatch, status, initialRecentChapters.length]);
 
-  if (status === "loading") {
+  const displayChapters =
+    initialRecentChapters.length > 0 ? initialRecentChapters : recentChapters;
+
+  const isLoading = initialRecentChapters.length === 0 && status === "loading";
+  const hasError = initialRecentChapters.length === 0 && error;
+
+  if (isLoading) {
     return (
       <div className="w-full flex justify-center py-10">
         <LoadingSpinner size="medium" />
@@ -30,7 +47,7 @@ const RecentUpdates: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (hasError) {
     return (
       <div className="w-full py-10 text-center">
         <p className="text-red-600">Error loading recent updates.</p>
@@ -38,7 +55,7 @@ const RecentUpdates: React.FC = () => {
     );
   }
 
-  if (recentChapters.length === 0) {
+  if (displayChapters.length === 0) {
     return (
       <div className="w-full py-10 text-center">
         <p className="text-gray-500">No recent updates available.</p>
@@ -63,15 +80,12 @@ const RecentUpdates: React.FC = () => {
           </tr>
         </thead>
         <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-          {recentChapters.map((chapter) => (
+          {displayChapters.map((chapter) => (
             <tr
               key={chapter.id}
               className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
               onClick={() => {
-                const slug = encodeURIComponent(
-                  chapter.novel_title.trim().replace(/\s+/g, "-")
-                );
-
+                const slug = chapter.novel_title.trim().replace(/\s+/g, "-");
                 router.push(`/novel/${slug}/chapter/${chapter.chapter_number}`);
               }}
             >
