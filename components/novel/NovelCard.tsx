@@ -114,8 +114,8 @@ const NovelCard: React.FC<NovelCardProps> = ({
               className="absolute inset-0 w-full h-full object-cover"
               fill
               onError={() => setImageError(true)}
-              priority={false} // Don't priority load all images
-              loading="lazy" // Lazy load for better performance
+              priority // Don't priority load all images
+              fetchPriority="high"  // Lazy load for better performance
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
             />
           )}
