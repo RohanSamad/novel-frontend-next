@@ -93,7 +93,7 @@
 //       if (!token) return;
 
 //       const response = await axios.get(
-//         `https://development.mitprogrammer.com/novel/public/api/user-rating/${encodeURIComponent(
+//         `${process.env.NEXT_PUBLIC_API_URL}/api/user-rating/${encodeURIComponent(
 //           novelId
 //         )}`,
 //         {
@@ -118,7 +118,7 @@
 //     try {
 //       const token = localStorage.getItem("auth_token");
 //       const response = await axios.get(
-//         `https://development.mitprogrammer.com/novel/public/api/novels/stats/${encodeURIComponent(
+//         `${process.env.NEXT_PUBLIC_API_URL}/api/novels/stats/${encodeURIComponent(
 //           novelId
 //         )}`,
 //         {
@@ -150,7 +150,7 @@
 //       if (!token) throw new Error("No authentication token found");
 
 //       const response = await axios.post(
-//         `https://development.mitprogrammer.com/novel/public/api/novel-ratings`,
+//         `${process.env.NEXT_PUBLIC_API_URL}/api/novel-ratings`,
 //         {
 //           novel_id: novelId,
 //           rating,
@@ -583,7 +583,7 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
       if (!token) return;
 
       const response = await axios.get(
-        `https://development.mitprogrammer.com/novel/public/api/user-rating/${encodeURIComponent(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/user-rating/${encodeURIComponent(
           novelId
         )}`,
         {
@@ -609,7 +609,7 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
     try {
       const token = localStorage.getItem("auth_token");
       const response = await axios.get(
-        `https://development.mitprogrammer.com/novel/public/api/novels/stats/${encodeURIComponent(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/novels/stats/${encodeURIComponent(
           novelId
         )}`,
         {
@@ -642,7 +642,7 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
       if (!token) throw new Error("No authentication token found");
 
       const response = await axios.post(
-        `https://development.mitprogrammer.com/novel/public/api/novel-ratings`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/novel-ratings`,
         {
           novel_id: novelId,
           rating,

@@ -17,8 +17,7 @@ const SignUpPage: React.FC = () => {
 
   const router = useRouter();
   const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_URL ||
-    "https://development.mitprogrammer.com/novel/public";
+    process.env.NEXT_PUBLIC_API_URL
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

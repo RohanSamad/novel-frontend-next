@@ -63,7 +63,7 @@ const EditNovelPage = () => {
   const fetchGenres = async () => {
     try {
       const response = await fetch(
-        `https://development.mitprogrammer.com/novel/public/api/novels/genres`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/novels/genres`,
         {
           headers: {
             Accept: "application/json",
