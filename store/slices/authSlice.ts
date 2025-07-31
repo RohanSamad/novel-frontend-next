@@ -23,7 +23,7 @@ const initialState: AuthState = {
 };
 
 // Safely access environment variable with fallback
-const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}`;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const login = createAsyncThunk(
   'auth/login',
@@ -35,7 +35,7 @@ export const login = createAsyncThunk(
 
       const response = await axios.post(`${API_BASE_URL}/api/login`, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          // 'Content-Type': 'multipart/form-data',
           Accept: 'application/json',
         },
       });

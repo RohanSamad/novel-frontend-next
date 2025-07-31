@@ -2,10 +2,10 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAppSelector } from "@/hooks/redux";
-import { ArrowLeft, Moon, Sun, BookOpen, PlayCircle } from "lucide-react";
 import AudioPlayer from "@/components/chapter/AudioPlayer";
 import ChapterNavigation from "@/components/chapter/ChapterNavigation";
 import ChapterSelector from "@/components/chapter/ChapterSelector";
+import { ArrowLeft, BookOpen, Moon, PlayCircle, Sun } from "lucide-react";
 
 interface ChapterPreferences {
   theme: "light" | "dark";
@@ -19,13 +19,10 @@ interface Novel {
   [key: string]: unknown;
 }
 
-// Either import this from your store:
-// import type { Chapter } from "@/store/slices/chaptersSlice";
-// Or define it to match:
 interface Chapter {
   id: string;
   novel_id: string;
-  chapter_number: number ;
+  chapter_number: number;
   title: string;
   content_text: string;
   audio_url: string;
@@ -67,7 +64,9 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
     };
   };
 
-  const [preferences, setPreferences] = useState<ChapterPreferences>(loadPreferences());
+  const [preferences, setPreferences] = useState<ChapterPreferences>(
+    loadPreferences()
+  );
   const [isChapterSelectorOpen, setIsChapterSelectorOpen] = useState(false);
 
   // Same useEffect for saving preferences
@@ -111,7 +110,6 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
     }));
   };
 
-  // Same handleChapterEnd logic as your original code
   const handleChapterEnd = () => {
     if (!preferences.autoPlayEnabled) return;
     const currentIndex = chapters.findIndex(
@@ -224,7 +222,7 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
                 aria-label="Increase font size"
               >
                 <span className="font-medium">A+</span>
-              </button>                                                                                                 
+              </button>
               <button
                 onClick={toggleTheme}
                 className={`p-2 rounded-full ${
@@ -263,8 +261,8 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
           <div className="mb-4 p-4 bg-warning-50 text-warning-800 rounded-lg">
             <p className="text-sm">
               NOTE: Audio not playing? Try to sign out and retry! If still not
-              working, remain signed out and retry! Autoplay feature on the
-              top bar only works for Chrome browsers on desktops and Android
+              working, remain signed out and retry! Autoplay feature on the top
+              bar only works for Chrome browsers on desktops and Android
               devices. If autoplay failed to play the audio, turn it off,
               refresh the page and turn it on again.
             </p>
@@ -288,7 +286,8 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
             <ChapterNavigation
               chapters={chapters}
               currentChapterId={chapterId || ""}
-              novelId={novelId || ""}
+              // novelId={novelId || ""}
+              novelSlug={slug || ""} 
               onListClick={() => setIsChapterSelectorOpen(true)}
             />
           </div>
@@ -309,7 +308,8 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
             <ChapterNavigation
               chapters={chapters}
               currentChapterId={chapterId || ""}
-              novelId={novelId || ""}
+              // novelId={slug || ""}
+              novelSlug={slug || ""} 
               onListClick={() => setIsChapterSelectorOpen(true)}
             />
           </div>

@@ -8,11 +8,15 @@ import Footer from "@/components/layout/Footer";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: 'swap', 
+  preload: true,  
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: 'swap',
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -20,6 +24,9 @@ export const metadata: Metadata = {
   description: "Novel Tavern - Your premier platform for audiobooks and novels",
   icons: {
     icon: '/book-icon.svg', 
+  },
+  other: {
+    'theme-color': '#2563EB',
   },
 };
 
@@ -29,15 +36,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" >
+    <html lang="en">
+      <head>
+        <link rel="dns-prefetch" href="https://development.mitprogrammer.com" />
+        <link rel="preconnect" href="https://development.mitprogrammer.com" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
           <Header/>
-          {children}
+            {children}
           <Footer/>
-          </Providers>
+        </Providers>
       </body>
     </html>
   );

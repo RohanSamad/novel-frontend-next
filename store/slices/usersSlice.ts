@@ -22,12 +22,8 @@ const initialState: UsersState = {
   error: null,
 };
 
-// Safely access environment variable with fallback
-// const API_BASE_URL = typeof process !== 'undefined' && process.env?.REACT_APP_API_URL
-//   ? process.env.REACT_APP_API_URL
-//   : `${process.env.NEXT_PUBLIC_API_URL}`;
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL;
+;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL; 
 
 export const fetchUsers = createAsyncThunk(
   'users/fetchUsers',

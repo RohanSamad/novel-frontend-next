@@ -24,58 +24,8 @@ const initialState: FeaturedState = {
   error: null,
 };
 
-const API_BASE_URL =  `${process.env.NEXT_PUBLIC_API_URL}`;
+const API_BASE_URL =  process.env.NEXT_PUBLIC_API_URL;
 
-// export const fetchFeaturedNovels = createAsyncThunk(
-//   'featured/fetchFeaturedNovels',
-//   async (_, { rejectWithValue }) => {
-//     try {
-     
-
-//       const response = await axios.get(`${API_BASE_URL}/api/featured-novels`, {
-//         headers: {
-//           Accept: 'application/json',
-//           'X-Requested-With': 'XMLHttpRequest',
-//         },
-//       });
-
-//       console.log('Fetch featured novels response:', response.data);
-
-//       const featuredNovels = Array.isArray(response.data.data) ? response.data.data : [];
-//       return featuredNovels.map((featured: any): FeaturedNovel => ({
-//         id: featured.id?.toString() || '',
-//         novel_id: featured.novel_id?.toString() || '',
-//         position: featured.position || 0,
-//         start_date: featured.start_date || '',
-//         end_date: featured.end_date || '',
-//         novel: featured.novel
-//           ? {
-//               id: featured.novel.id?.toString() || '',
-//               title: featured.novel.title || '',
-//               author_id: featured.novel.author_id?.toString() || '',
-//               author: {
-//                 id: featured.novel.author?.id?.toString() || '',
-//                 name: featured.novel.author?.name || ''
-               
-//               },
-//               publisher: featured.novel.publisher || '',
-//               cover_image_url: featured.novel.cover_image_url || '',
-//               synopsis: featured.novel.synopsis || '',
-//               status: featured.novel.status || '',
-//               publishing_year: featured.novel.publishing_year || 0,
-//               created_at: featured.novel.created_at || '',
-//               updated_at: featured.novel.updated_at || '',
-//             }
-//           : undefined,
-//       }));
-//     } catch (error: any) {
-//       console.error('Fetch featured novels error:', error.response || error);
-//       return rejectWithValue(
-//         error.response?.data?.message || error.message || 'Failed to fetch featured novels'
-//       );
-//     }
-//   }
-// );
 export const fetchFeaturedNovels = createAsyncThunk(
   'featured/fetchFeaturedNovels',
   async (_, { rejectWithValue }) => {
@@ -93,7 +43,6 @@ export const fetchFeaturedNovels = createAsyncThunk(
         },
       });
 
-      // console.log('Fetch featured novels response:', response.data);
 
       const featuredNovels = Array.isArray(response.data.data)
         ? response.data.data
@@ -173,7 +122,6 @@ export const addFeaturedNovel = createAsyncThunk(
         },
       });
 
-      // console.log('Add featured novel response:', response.data);
 
       const addedFeatured = response.data.data;
       if (!addedFeatured || !addedFeatured.id) {
@@ -233,7 +181,6 @@ export const removeFeaturedNovel = createAsyncThunk(
         },
       });
 
-      // console.log('Remove featured novel response:', response.data);
 
       if (response.data.message !== 'Featured novel removed successfully') {
         throw new Error('Remove operation failed');

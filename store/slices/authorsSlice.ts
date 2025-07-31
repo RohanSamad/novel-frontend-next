@@ -25,9 +25,9 @@ const initialState: AuthorsState = {
 };
 
 // Safely access environment variable with fallback
-const API_BASE_URL = typeof process !== 'undefined' && process.env?.REACT_APP_API_URL
-  ? process.env.REACT_APP_API_URL
-  : `${process.env.NEXT_PUBLIC_API_URL}`;
+const API_BASE_URL = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL
+  ? process.env.NEXT_PUBLIC_API_URL
+  : 'https://development.mitprogrammer.com/novel/public';
 
 export const fetchAuthors = createAsyncThunk(
   'authors/fetchAuthors',
@@ -47,7 +47,7 @@ export const fetchAuthors = createAsyncThunk(
 
       const authors = response.data.data; // Expect { data: [{ id, name, bio, avatar_url, created_at, updated_at }] }
 
-      return authors.map((author: any) => ({
+      return authors.map((author : any) => ({
         id: author.id.toString(), // Convert id to string to match Author interface
         name: author.name,
         bio: author.bio,

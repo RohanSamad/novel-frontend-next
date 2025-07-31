@@ -180,9 +180,8 @@ const AdminNovelsPage: React.FC = () => {
                                 fill
                                 className="object-cover"
                                 sizes="100vw"
-                                unoptimized={
-                                  !novel.cover_image_url?.startsWith("http")
-                                }
+                                loading="eager"
+                                priority
                               />
                             </div>
                           </div>

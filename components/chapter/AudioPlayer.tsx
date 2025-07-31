@@ -37,7 +37,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const autoPlayTimeout = useRef<number | null>(null);
   const dispatch = useAppDispatch();
 
-  // Cleanup function to stop audio and clear intervals
   const cleanup = () => {
     if (progressInterval.current) {
       clearInterval(progressInterval.current);
@@ -53,12 +52,10 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     }
   };
 
-  // Cleanup on component unmount
   useEffect(() => {
     return cleanup;
   }, []);
 
-  // Reset state when audio URL changes
   useEffect(() => {
     cleanup();
     autoPlayAttempted.current = false;
@@ -91,8 +88,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
               setCurrentTime(initialPosition);
             }
 
-            console.log('Audio load error:', !autoPlayAttempted.current,autoPlay);
-            // Add 2-second buffer before autoplay
             if (autoPlay ) {
               autoPlayAttempted.current = true;
               autoPlayTimeout.current = window.setTimeout(() => {
@@ -105,7 +100,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             }
           },
           onplay: () => {
-            // Stop any other playing audio
             setIsPlaying(true);
             startProgressInterval();
           },
@@ -151,7 +145,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     initializeAudio();
   }, [audioUrl, volume, isMuted, initialPosition, autoPlay, onEnded]);
 
-  // Save progress periodically
   useEffect(() => {
     const saveProgressInterval = setInterval(() => {
       if (userId && currentTime > 0) {

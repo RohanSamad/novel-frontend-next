@@ -25,6 +25,14 @@ export interface Novel {
   created_at: string;
   updated_at: string;
 }
+export interface Chapter {
+  id: number;
+  title: string;
+  chapter_number: number;
+  novel_title: string;
+  created_at: string;
+}
+
 
 interface NovelsState {
   novels: Novel[];
@@ -43,7 +51,8 @@ const initialState: NovelsState = {
 };
 
 // Use Vite environment variable with fallback
-const API_BASE_URL =process.env.NEXT_PUBLIC_API_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
    
 export const fetchNovels = createAsyncThunk(
   "novels/fetchNovels",
