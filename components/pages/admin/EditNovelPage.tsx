@@ -59,18 +59,16 @@ const EditNovelPage = () => {
       });
     }
   }, [selectedNovel, id]);
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
   const fetchGenres = async () => {
     try {
-      const response = await fetch(
-        `https://development.mitprogrammer.com/novel/public/api/novels/genres`,
-        {
-          headers: {
-            Accept: "application/json",
-          },
-          cache: "no-store",
-        }
-      );
+      const response = await fetch(`${API_BASE}/api/novels/genres`, {
+        headers: {
+          Accept: "application/json",
+        },
+        cache: "no-store",
+      });
       const data = await response.json();
       setGenres(
         Array.isArray(data.data)
@@ -87,12 +85,12 @@ const EditNovelPage = () => {
     }
   };
 
-  // useEffect(() => {
-  //   if (!user || user.role !== "admin") {
-  //     toast.error("You do not have permission to access this page");
-  //     router.push("/");
-  //   }
-  // }, [user, router]);
+  useEffect(() => {
+    if (!user || user.role !== "admin") {
+      toast.error("You do not have permission to access this page");
+      router.push("/");
+    }
+  }, [user, router]);
 
   if (status === "loading" && !selectedNovel) {
     return (
@@ -207,7 +205,6 @@ const EditNovelPage = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              {/* Title */}
               <div>
                 <label
                   htmlFor="title"
@@ -227,7 +224,6 @@ const EditNovelPage = () => {
                 />
               </div>
 
-              {/* Author */}
               <div>
                 <label
                   htmlFor="author"
@@ -247,7 +243,6 @@ const EditNovelPage = () => {
                 />
               </div>
 
-              {/* Publisher */}
               <div>
                 <label
                   htmlFor="publisher"
@@ -270,7 +265,6 @@ const EditNovelPage = () => {
                 />
               </div>
 
-              {/* Publishing Year */}
               <div>
                 <label
                   htmlFor="publishingYear"
@@ -295,7 +289,6 @@ const EditNovelPage = () => {
                 />
               </div>
 
-              {/* Cover Image Upload */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Cover Image
@@ -352,7 +345,6 @@ const EditNovelPage = () => {
                 </div>
               </div>
 
-              {/* Status */}
               <div>
                 <label
                   htmlFor="status"
@@ -374,7 +366,6 @@ const EditNovelPage = () => {
                 </select>
               </div>
 
-              {/* Genres */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Genres (Select multiple)
@@ -403,7 +394,6 @@ const EditNovelPage = () => {
                 </div>
               </div>
 
-              {/* Synopsis */}
               <div>
                 <label
                   htmlFor="synopsis"
@@ -427,7 +417,6 @@ const EditNovelPage = () => {
                 />
               </div>
 
-              {/* Submit Button */}
               <div className="flex justify-end">
                 <Button
                   type="submit"

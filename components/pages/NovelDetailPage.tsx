@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback, useMemo, memo } from "react";
+import { useEffect, useState, useCallback, useMemo, memo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/hooks/redux";
 import { Star, ChevronRight, Calendar, BookOpen } from "lucide-react";
@@ -10,7 +10,6 @@ import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 
-// ✅ Lazy load heavy components
 const RatingModal = dynamic(() => import("@/components/ui/RatingModal"), {
   loading: () => <div>Loading...</div>,
 });
@@ -63,8 +62,7 @@ interface NovelDetailClientProps {
   novelId: string;
   slug: string;
 }
-
-// ✅ Memoized sub-components for better performance
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 const NovelHeader = memo(
   ({
     novel,
@@ -89,7 +87,6 @@ const NovelHeader = memo(
   }) => (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
       <div className="relative">
-        {/* ✅ Optimized background image with better loading */}
         <div className="absolute inset-0">
           <Image
             src={novel.cover_image_url}
@@ -100,12 +97,11 @@ const NovelHeader = memo(
             priority={false}
             fetchPriority="low"
             quality={35}
-            placeholder="empty" 
+            placeholder="empty"
           />
         </div>
 
         <div className="relative md:flex p-8">
-          {/* ✅ Optimized cover image */}
           <div className="md:w-1/3 lg:w-1/4 flex-shrink-0">
             <div className="relative pb-[150%] rounded-lg overflow-hidden shadow-xl">
               <Image
@@ -123,7 +119,6 @@ const NovelHeader = memo(
             </div>
           </div>
 
-          {/* Novel Info */}
           <div className="md:w-2/3 lg:w-3/4 md:pl-8 mt-6 md:mt-0">
             <h1 className="text-3xl md:text-4xl font-serif font-bold text-primary-900 mb-2">
               {novel.title}
@@ -227,7 +222,6 @@ const NovelHeader = memo(
 
 NovelHeader.displayName = "NovelHeader";
 
-// ✅ Memoized chapter item for better list performance
 const ChapterItem = memo(
   ({ chapter, slug }: { chapter: Chapter; slug: string }) => (
     <Link
@@ -264,22 +258,18 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
   const router = useRouter();
   const { user } = useAppSelector((state) => state.auth);
 
-  // ✅ Optimized state management
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
   const [userRating, setUserRating] = useState(0);
   const [isLoadingRating, setIsLoadingRating] = useState(false);
 
-  // ✅ Convert initial stats once and memoize
   const [novelStats, setNovelStats] = useState<NovelStats>(() => ({
     averageRating: parseFloat(initialStats.average_rating?.toString() || "0"),
     ratingCount: initialStats.rating_count || 0,
   }));
 
-  // ✅ Use server-rendered data as initial state
   const novel = useMemo(() => initialNovel, [initialNovel]);
   const chapters = useMemo(() => initialChapters, [initialChapters]);
 
-  // ✅ Memoize latest chapter calculation
   const latestChapter = useMemo(() => {
     if (chapters.length === 0) return null;
     return chapters.reduce((latest, current) => {
@@ -289,7 +279,6 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
     });
   }, [chapters]);
 
-  // ✅ Optimized API calls with proper error handling and caching
   const fetchUserRating = useCallback(async () => {
     if (!user || !novelId) return;
 
@@ -298,7 +287,7 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
       if (!token) return;
 
       const response = await axios.get(
-        `https://development.mitprogrammer.com/novel/public/api/user-rating/${encodeURIComponent(
+        `${API_BASE}/api/user-rating/${encodeURIComponent(
           novelId
         )}`,
         {
@@ -306,24 +295,21 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
             Authorization: `Bearer ${token}`,
             Accept: "application/json",
           },
-          timeout: 5000, // ✅ Add timeout
+          timeout: 5000,
         }
       );
 
       if (response.data.data) {
         setUserRating(response.data.data.rating);
       }
-    } catch {
-      // Silent fail for missing rating
-      console.log("No existing rating found");
-    }
+    } catch {}
   }, [user, novelId]);
 
   const fetchNovelStats = useCallback(async () => {
     try {
       const token = localStorage.getItem("auth_token");
       const response = await axios.get(
-        `https://development.mitprogrammer.com/novel/public/api/novels/stats/${encodeURIComponent(
+        `${API_BASE}/api/novels/stats/${encodeURIComponent(
           novelId
         )}`,
         {
@@ -331,7 +317,7 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
             Authorization: `Bearer ${token}`,
             Accept: "application/json",
           },
-          timeout: 5000, // ✅ Add timeout
+          timeout: 5000,
         }
       );
 
@@ -358,7 +344,7 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
         if (!token) throw new Error("No authentication token found");
 
         const response = await axios.post(
-          `https://development.mitprogrammer.com/novel/public/api/novel-ratings`,
+          `${API_BASE}/api/novel-ratings`,
           {
             novel_id: novelId,
             rating,
@@ -369,13 +355,13 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
               Accept: "application/json",
               "Content-Type": "application/json",
             },
-            timeout: 10000, // ✅ Add timeout
+            timeout: 10000,
           }
         );
 
         const data = response.data.data;
         setUserRating(data.rating);
-        await fetchNovelStats(); // Refresh stats
+        await fetchNovelStats();
         toast.success("Rating submitted successfully");
         setIsRatingModalOpen(false);
       } catch (error) {
@@ -399,17 +385,35 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
     setIsRatingModalOpen(true);
   }, []);
 
-  // ✅ Fetch user rating on mount/login
   useEffect(() => {
     if (user && novelId) {
       fetchUserRating();
     }
   }, [user, novelId, fetchUserRating]);
 
+  const [visibleChapters, setVisibleChapters] = useState<Chapter[]>(
+    chapters.slice(0, 20)
+  );
+  const [loadCount, setLoadCount] = useState(20);
+
+  const observer = useRef<IntersectionObserver | null>(null);
+  const lastChapterRef = useCallback((node: HTMLDivElement | null) => {
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        setLoadCount((prev) => prev + 20);
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, []);
+
+  useEffect(() => {
+    setVisibleChapters(chapters.slice(0, loadCount));
+  }, [chapters, loadCount]);
+
   return (
     <>
       <div className="container mx-auto px-4 py-8">
-        {/* ✅ Optimized breadcrumb */}
         <nav
           className="flex items-center text-sm text-gray-500 mb-6"
           aria-label="Breadcrumb"
@@ -421,7 +425,6 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
           <span className="text-gray-900">Novel Details</span>
         </nav>
 
-        {/* ✅ Use memoized header component */}
         <NovelHeader
           novel={novel}
           novelStats={novelStats}
@@ -432,7 +435,6 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
           userRating={userRating}
         />
 
-        {/* Latest Chapter */}
         {latestChapter && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
             <h2 className="text-xl font-serif font-bold text-primary-900 mb-4">
@@ -442,7 +444,6 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
           </div>
         )}
 
-        {/* Genres */}
         {novel.genres && novel.genres.length > 0 && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
             <h2 className="text-xl font-serif font-bold text-primary-900 mb-4">
@@ -462,7 +463,7 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
           </div>
         )}
 
-        {/* ✅ Optimized chapters list */}
+        
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="p-6 border-b border-gray-200">
             <h2 className="text-xl font-serif font-bold text-primary-900">
@@ -476,15 +477,21 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
             </div>
           ) : (
             <div className="divide-y max-h-96 overflow-y-auto">
-              {chapters.map((chapter) => (
-                <ChapterItem key={chapter.id} chapter={chapter} slug={slug} />
+              {visibleChapters.map((chapter, index) => (
+                <div
+                  key={chapter.id}
+                  ref={
+                    index === visibleChapters.length - 1 ? lastChapterRef : null
+                  }
+                >
+                  <ChapterItem chapter={chapter} slug={slug} />
+                </div>
               ))}
             </div>
           )}
         </div>
       </div>
 
-      {/* ✅ Lazy-loaded rating modal */}
       {isRatingModalOpen && (
         <RatingModal
           isOpen={isRatingModalOpen}

@@ -51,8 +51,8 @@ const initialState: NovelsState = {
 };
 
 // Use Vite environment variable with fallback
-const API_BASE_URL =
-  "https://development.mitprogrammer.com/novel/public";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
    
 export const fetchNovels = createAsyncThunk(
   "novels/fetchNovels",

@@ -3,7 +3,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Base styles */
 :root {
   -webkit-tap-highlight-color: transparent;
   text-size-adjust: 100%;
@@ -11,81 +10,67 @@
 
   
 }
-
-/* Smooth scrolling for supported browsers */
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
   }
 }
 
-/* Better mobile touch handling */
 * {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
 }
 
-/* Allow text selection in specific elements */
 p, h1, h2, h3, h4, h5, h6, input, textarea {
   -webkit-user-select: text;
   user-select: text;
 }
 
-/* Mobile viewport height fix */
 .min-h-screen {
   min-height: 100vh;
   min-height: -webkit-fill-available;
 }
 
-/* Improve font rendering */
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
-/* Fix iOS input zoom */
 @supports (-webkit-touch-callout: none) {
   input, select, textarea {
     font-size: 16px !important;
   }
 }
 
-/* Fix mobile Safari 100vh issue */
 @supports (-webkit-touch-callout: none) {
   .h-screen {
     height: -webkit-fill-available;
   }
 }
 
-/* Improve scrolling performance */
 * {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Fix mobile tap delay */
 a, button {
   touch-action: manipulation;
 }
 
-/* Disable pull-to-refresh on mobile */
 html, body {
   overscroll-behavior-y: none;
 }
 
-/* Fix mobile double-tap zoom */
 a, button, [role="button"] {
   touch-action: manipulation;
 }
 
-/* Fix mobile keyboard issues */
 input, textarea {
   -webkit-appearance: none;
   border-radius: 0;
 }
 
-/* Fix iOS momentum scrolling */
 .overflow-y-auto, .overflow-x-auto {
   -webkit-overflow-scrolling: touch;
 }

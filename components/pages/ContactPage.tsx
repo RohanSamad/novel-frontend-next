@@ -15,13 +15,10 @@ const ContactPage: React.FC = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Create mailto link with form data
     const mailtoLink = `mailto:mushcoomers@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(`From: ${email}\n\n${message}`)}`;
 
-    // Open default mail client
     window.location.href = mailtoLink;
 
-    // Show success message
     toast.success('Opening your email client...');
     setIsSubmitting(false);
   };

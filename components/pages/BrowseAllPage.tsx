@@ -20,7 +20,6 @@ const BrowseAllPage: React.FC = () => {
     }
   }, [dispatch, status]);
 
-  // Sort novels alphabetically by title
   const sortedNovels = [...novels].sort((a, b) => a.title.localeCompare(b.title));
 
   const filteredNovels = searchQuery
@@ -46,14 +45,12 @@ const BrowseAllPage: React.FC = () => {
   return (
     <div className="pt-20 min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        {/* Breadcrumb */}
         <div className="flex items-center text-sm text-gray-500 mb-6">
           <Link href="/" className="hover:text-primary-600">Home</Link>
           <ChevronRight className="w-4 h-4 mx-2" />
           <span className="text-gray-900">Browse All</span>
         </div>
 
-        {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-serif font-bold text-primary-900 mb-4">Browse All Novels</h1>
           <form onSubmit={handleSearch} className="max-w-2xl">
@@ -70,7 +67,6 @@ const BrowseAllPage: React.FC = () => {
           </form>
         </div>
 
-        {/* Novels Grid */}
         {status === 'loading' ? (
           <div className="flex justify-center py-12">
             <LoadingSpinner size="large" />
@@ -87,7 +83,6 @@ const BrowseAllPage: React.FC = () => {
               ))}
             </div>
 
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className="mt-8 flex justify-center">
                 <div className="flex space-x-2">
