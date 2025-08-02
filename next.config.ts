@@ -5,7 +5,29 @@ const nextConfig: NextConfig = {
   compress: true,
 
   images: {
-    domains: ["development.mitprogrammer.com"],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 's3.eu-central-003.backblazeb2.com',
+        pathname: '/**',
+      },
+       {
+        protocol: "http",
+        hostname: "5.181.1.74",
+        port: "8000",
+        pathname: "/**",
+      },
+      {
+        protocol: "http",
+        hostname: "127.0.0.1",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "development.mitprogrammer.com",
+        pathname: "/storage/**",
+      },
+    ],
     formats: ["image/webp", "image/avif"],
   },
 
