@@ -36,8 +36,9 @@ async function getNovelData(novelId: string) {
 
 async function getChaptersData(novelId: string) {
   try {
+    const page = 1;
     const response = await fetch(
-      `${API_BASE}/api/chapters/novel/${encodeURIComponent(novelId)}`,
+      `${API_BASE}/api/chapters/novel/${encodeURIComponent(novelId)}?page=${page}`,
       {
         headers: {
           Accept: "application/json",
@@ -100,7 +101,7 @@ export async function generateMetadata({
     const novelId = slug.replace(/-/g, " ");
 
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Metadata generation timeout")), 5000)
+      setTimeout(() => reject(new Error("Metadata generation timeout")), 10000)
     );
 
     type GetNovelDataReturn = Awaited<ReturnType<typeof getNovelData>>;
@@ -202,6 +203,14 @@ export default async function NovelDetailPage({
       chaptersResponse.status === "fulfilled"
         ? chaptersResponse.value?.data || []
         : [];
+    const totalChapters =
+      chaptersResponse.status === "fulfilled"
+        ? chaptersResponse.value?.totalChapters
+        : undefined;
+    const latestChapter =
+      chaptersResponse.status === "fulfilled"
+        ? chaptersResponse.value?.latestChapter
+        : undefined;
     const stats =
       statsResponse.status === "fulfilled"
         ? statsResponse.value?.data || { average_rating: 0, rating_count: 0 }
@@ -253,10 +262,11 @@ export default async function NovelDetailPage({
             __html: JSON.stringify(structuredData),
           }}
         />
-
         <NovelDetailClient
           initialNovel={novel}
+          totalChapters={totalChapters}
           initialChapters={chapters}
+          latestChapter={latestChapter}
           initialStats={stats}
           novelId={novelId}
           slug={slug}

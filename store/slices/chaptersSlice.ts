@@ -21,6 +21,7 @@ interface ChaptersState {
   chapters: Chapter[];
   selectedChapter: Chapter | null;
   recentChapters: RecentChapter[];
+  totalChapters: Number;
   status: "idle" | "loading" | "succeeded" | "failed";
   error: string | null;
 }
@@ -30,6 +31,7 @@ const initialState: ChaptersState = {
   selectedChapter: null,
   recentChapters: [],
   status: "idle",
+  totalChapters: 0,
   error: null,
 };
 

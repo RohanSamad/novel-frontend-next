@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback, useMemo, memo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/hooks/redux";
-import { Star, ChevronRight, Calendar, BookOpen } from "lucide-react";
+import { Star, ChevronRight, Calendar, BookOpen, Loader2 } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import Button from "@/components/ui/Button";
@@ -55,18 +55,64 @@ interface APINovelStats {
   rating_count: number;
 }
 
+interface ChaptersApiResponse {
+  data: Chapter[];
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+}
+
 interface NovelDetailClientProps {
   initialNovel: Novel;
   initialChapters: Chapter[];
+  latestChapter: Chapter;
   initialStats: APINovelStats;
   novelId: string;
   slug: string;
+  totalChapters: number;
 }
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+
+// API function for fetching chapters
+async function getChaptersData(novelId: string, page: number = 1): Promise<ChaptersApiResponse> {
+  try {
+    const response = await fetch(
+      `${API_BASE}/api/chapters/novel/${encodeURIComponent(novelId)}?page=${page}`,
+      {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        next: {
+          revalidate: 1800,
+          tags: [`chapters-${novelId}`],
+        },
+        signal: AbortSignal.timeout(8000),
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`Failed to fetch chapters: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching chapters:", error);
+    return { 
+      data: [], 
+      current_page: 1, 
+      last_page: 1, 
+      per_page: 20, 
+      total: 0 
+    };
+  }
+}
+
 const NovelHeader = memo(
   ({
     novel,
     novelStats,
+    totalChapters,
     chapters,
     onStartReading,
     onRateClick,
@@ -75,8 +121,9 @@ const NovelHeader = memo(
   }: {
     novel: Novel;
     novelStats: NovelStats;
-    chapters: Chapter[];
+    totalChapters: number;
     onStartReading: () => void;
+    chapters?:Chapter[];
     onRateClick: () => void;
     user: {
       id?: string;
@@ -134,7 +181,7 @@ const NovelHeader = memo(
               </div>
               <div className="flex items-center text-primary-600">
                 <BookOpen className="w-5 h-5" />
-                <span className="ml-1">{chapters.length} Chapters</span>
+                <span className="ml-1">{totalChapters} Chapters</span>
               </div>
             </div>
 
@@ -187,7 +234,7 @@ const NovelHeader = memo(
                 size="large"
                 icon={<BookOpen className="w-5 h-5" />}
                 onClick={onStartReading}
-                disabled={chapters.length === 0}
+                disabled={totalChapters === 0}
               >
                 Start Reading
               </Button>
@@ -251,9 +298,11 @@ ChapterItem.displayName = "ChapterItem";
 const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
   initialNovel,
   initialChapters,
+  latestChapter,
   initialStats,
   novelId,
   slug,
+  totalChapters,
 }) => {
   const router = useRouter();
   const { user } = useAppSelector((state) => state.auth);
@@ -267,17 +316,75 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
     ratingCount: initialStats.rating_count || 0,
   }));
 
-  const novel = useMemo(() => initialNovel, [initialNovel]);
-  const chapters = useMemo(() => initialChapters, [initialChapters]);
+  // Chapter loading states
+  const [chapters, setChapters] = useState<Chapter[]>(initialChapters);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoadingChapters, setIsLoadingChapters] = useState(false);
+  const [hasMoreChapters, setHasMoreChapters] = useState(true);
+  const [chapterError, setChapterError] = useState<string | null>(null);
 
-  const latestChapter = useMemo(() => {
-    if (chapters.length === 0) return null;
-    return chapters.reduce((latest, current) => {
-      return new Date(current.created_at) > new Date(latest.created_at)
-        ? current
-        : latest;
+  const novel = useMemo(() => initialNovel, [initialNovel]);
+
+  // Load more chapters function
+  const loadMoreChapters = useCallback(async () => {
+    if (isLoadingChapters || !hasMoreChapters) return;
+
+    setIsLoadingChapters(true);
+    setChapterError(null);
+
+    try {
+      const nextPage = currentPage + 1;
+      const response = await getChaptersData(novelId, nextPage);
+      
+      if (response.data && response.data.length > 0) {
+        setChapters(prev => {
+          // Avoid duplicates by filtering out chapters that already exist
+          const existingIds = new Set(prev.map(ch => ch.id));
+          const newChapters = response.data.filter(ch => !existingIds.has(ch.id));
+          return [...prev, ...newChapters];
+        });
+        setCurrentPage(nextPage);
+        
+        // Check if we've reached the last page
+        if (nextPage >= response.last_page || chapters.length + response.data.length >= totalChapters) {
+          setHasMoreChapters(false);
+        }
+      } else {
+        setHasMoreChapters(false);
+      }
+    } catch (error) {
+      console.error("Error loading more chapters:", error);
+      setChapterError("Failed to load more chapters. Please try again.");
+      toast.error("Failed to load more chapters");
+    } finally {
+      setIsLoadingChapters(false);
+    }
+  }, [isLoadingChapters, hasMoreChapters, currentPage, novelId, totalChapters, chapters.length]);
+
+  // Intersection Observer for infinite scroll
+  const observer = useRef<IntersectionObserver | null>(null);
+  const lastChapterRef = useCallback((node: HTMLDivElement | null) => {
+    if (isLoadingChapters) return;
+    if (observer.current) observer.current.disconnect();
+    
+    observer.current = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && hasMoreChapters) {
+        loadMoreChapters();
+      }
+    }, {
+      threshold: 0.1,
+      rootMargin: '100px',
     });
-  }, [chapters]);
+    
+    if (node) observer.current.observe(node);
+  }, [isLoadingChapters, hasMoreChapters, loadMoreChapters]);
+
+  // Initialize hasMoreChapters based on initial data
+  useEffect(() => {
+    if (initialChapters.length >= totalChapters) {
+      setHasMoreChapters(false);
+    }
+  }, [initialChapters.length, totalChapters]);
 
   const fetchUserRating = useCallback(async () => {
     if (!user || !novelId) return;
@@ -391,26 +498,6 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
     }
   }, [user, novelId, fetchUserRating]);
 
-  const [visibleChapters, setVisibleChapters] = useState<Chapter[]>(
-    chapters.slice(0, 20)
-  );
-  const [loadCount, setLoadCount] = useState(20);
-
-  const observer = useRef<IntersectionObserver | null>(null);
-  const lastChapterRef = useCallback((node: HTMLDivElement | null) => {
-    if (observer.current) observer.current.disconnect();
-    observer.current = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) {
-        setLoadCount((prev) => prev + 20);
-      }
-    });
-    if (node) observer.current.observe(node);
-  }, []);
-
-  useEffect(() => {
-    setVisibleChapters(chapters.slice(0, loadCount));
-  }, [chapters, loadCount]);
-
   return (
     <>
       <div className="container mx-auto px-4 py-8">
@@ -428,7 +515,7 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
         <NovelHeader
           novel={novel}
           novelStats={novelStats}
-          chapters={chapters}
+          totalChapters={totalChapters}
           onStartReading={startReading}
           onRateClick={handleRateClick}
           user={user}
@@ -463,11 +550,10 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
           </div>
         )}
 
-        
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="p-6 border-b border-gray-200">
             <h2 className="text-xl font-serif font-bold text-primary-900">
-              Chapters ({chapters.length})
+              Chapters ({totalChapters})
             </h2>
           </div>
 
@@ -477,16 +563,48 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
             </div>
           ) : (
             <div className="divide-y max-h-96 overflow-y-auto">
-              {visibleChapters.map((chapter, index) => (
+              {chapters.map((chapter, index) => (
                 <div
                   key={chapter.id}
                   ref={
-                    index === visibleChapters.length - 1 ? lastChapterRef : null
+                    index === chapters.length - 1 ? lastChapterRef : null
                   }
                 >
                   <ChapterItem chapter={chapter} slug={slug} />
                 </div>
               ))}
+              
+              {/* Loading indicator */}
+              {isLoadingChapters && (
+                <div className="p-6 text-center">
+                  <div className="flex items-center justify-center space-x-2">
+                    <Loader2 className="w-5 h-5 animate-spin text-primary-600" />
+                    <span className="text-gray-500">Loading more chapters...</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Error state */}
+              {chapterError && (
+                <div className="p-6 text-center">
+                  <p className="text-red-500 mb-2">{chapterError}</p>
+                  <Button
+                    variant="secondary"
+                    size="small"
+                    onClick={loadMoreChapters}
+                    disabled={isLoadingChapters}
+                  >
+                    Try Again
+                  </Button>
+                </div>
+              )}
+              
+              {/* End of chapters indicator */}
+              {!hasMoreChapters && chapters.length > 0 && chapters.length >= totalChapters && (
+                <div className="p-6 text-center text-gray-500">
+                  You've reached the end of all chapters.
+                </div>
+              )}
             </div>
           )}
         </div>
