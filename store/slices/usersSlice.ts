@@ -24,7 +24,7 @@ const initialState: UsersState = {
 
 ;
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://development.mitprogrammer.com/novel/public";
+  process.env.NEXT_PUBLIC_API_URL;
 
 export const fetchUsers = createAsyncThunk(
   'users/fetchUsers',

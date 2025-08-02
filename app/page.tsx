@@ -4,7 +4,7 @@ import React from "react";
 async function getNovels() {
   try {
     const response = await fetch(
-      "https://development.mitprogrammer.com/novel/public/api/novels",
+      `${process.env.NEXT_PUBLIC_API_URL}/api/novels`,
       {
         headers: {
           Accept: "application/json",
@@ -30,7 +30,7 @@ async function getNovels() {
 async function getRecentChapters() {
   try {
     const response = await fetch(
-      "https://development.mitprogrammer.com/novel/public/api/chapters/recent", 
+      `${process.env.NEXT_PUBLIC_API_URL}/api/chapters/recent`, 
       {
         headers: {
           Accept: "application/json",

@@ -33,8 +33,7 @@ const initialState: ChaptersState = {
   error: null,
 };
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const fetchChaptersByNovelId = createAsyncThunk(
   "chapters/fetchChaptersByNovelId",

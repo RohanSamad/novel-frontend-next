@@ -5,7 +5,7 @@ import { Metadata } from "next";
 async function getNovelData(novelId: string) {
   try {
     const response = await fetch(
-      `https://development.mitprogrammer.com/novel/public/api/novels/${encodeURIComponent(novelId)}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/novels/${encodeURIComponent(novelId)}`,
       {
         headers: {
           'Accept': 'application/json',
@@ -30,7 +30,7 @@ async function getNovelData(novelId: string) {
 async function getChaptersData(novelId: string) {
   try {
     const response = await fetch(
-      `https://development.mitprogrammer.com/novel/public/api/chapters/novel/${encodeURIComponent(novelId)}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/chapters/novel/${encodeURIComponent(novelId)}`,
       {
         headers: {
           'Accept': 'application/json',
@@ -55,7 +55,7 @@ async function getChapterData(novelId: string, chapterId: string) {
   try {
     // This should match your Redux fetchChapterById endpoint
     const response = await fetch(
-      `https://development.mitprogrammer.com/novel/public/api/chapters/novel/${encodeURIComponent(novelId)}/${chapterId}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/chapters/novel/${encodeURIComponent(novelId)}/${chapterId}`,
       {
         headers: {
           'Accept': 'application/json',

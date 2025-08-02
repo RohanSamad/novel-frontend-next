@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 async function getNovelData(novelId: string) {
   try {
     const response = await fetch(
-      `https://development.mitprogrammer.com/novel/public/api/novels/${encodeURIComponent(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/novels/${encodeURIComponent(
         novelId
       )}`,
       {
@@ -39,7 +39,7 @@ async function getNovelData(novelId: string) {
 async function getChaptersData(novelId: string) {
   try {
     const response = await fetch(
-      `https://development.mitprogrammer.com/novel/public/api/chapters/novel/${encodeURIComponent(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/chapters/novel/${encodeURIComponent(
         novelId
       )}`,
       {
@@ -69,7 +69,7 @@ async function getChaptersData(novelId: string) {
 async function getNovelStats(novelId: string) {
   try {
     const response = await fetch(
-      `https://development.mitprogrammer.com/novel/public/api/novels/stats/${encodeURIComponent(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/novels/stats/${encodeURIComponent(
         novelId
       )}`,
       {

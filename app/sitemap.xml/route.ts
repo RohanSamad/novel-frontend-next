@@ -7,7 +7,7 @@ const slugify = (str: string) => str?.trim().replace(/\s+/g, '-');
 
 const getNovels = async () => {
   try {
-    const res = await fetch('https://development.mitprogrammer.com/novel/public/api/novels', {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/novels`, {
       // ✅ Fix 2: Use static revalidation instead of no-store for better performance
       next: { revalidate: 3600 }, // Revalidate every hour
       headers: {
@@ -31,7 +31,7 @@ const getNovels = async () => {
 const getChapters = async (novelId: string) => {
   try {
     const res = await fetch(
-      `https://development.mitprogrammer.com/novel/public/api/chapters/novel/${encodeURIComponent(novelId)}`, 
+      `${process.env.NEXT_PUBLIC_API_URL}/api/chapters/novel/${encodeURIComponent(novelId)}`, 
       {
         // ✅ Fix 3: Use static revalidation
         next: { revalidate: 3600 },

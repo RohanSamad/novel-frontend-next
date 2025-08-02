@@ -40,7 +40,7 @@ const NovelRating: React.FC<NovelRatingProps> = ({
         throw new Error('No authentication token found');
       }
 
-      const response = await axios.get(`https://development.mitprogrammer.com/novel/public/api/novel-ratings`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/novel-ratings`, {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: 'application/json',
@@ -82,7 +82,7 @@ const NovelRating: React.FC<NovelRatingProps> = ({
       }
 
       const response = await axios.post(
-        `https://development.mitprogrammer.com/novel/public/api/novel-ratings`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/novel-ratings`,
         {
           novel_id: novelId,
           rating: value,
