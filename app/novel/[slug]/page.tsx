@@ -1,12 +1,14 @@
 import NovelDetailClient from "@/components/pages/NovelDetailPage";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
+// ✅ Optimized API calls with better error handling and caching
 async function getNovelData(novelId: string) {
   try {
     const response = await fetch(
-      `${API_BASE}/api/novels/${encodeURIComponent(novelId)}`,
+      `https://development.mitprogrammer.com/novel/public/api/novels/${encodeURIComponent(
+        novelId
+      )}`,
       {
         headers: {
           Accept: "application/json",
@@ -37,7 +39,9 @@ async function getNovelData(novelId: string) {
 async function getChaptersData(novelId: string) {
   try {
     const response = await fetch(
-      `${API_BASE}/api/chapters/novel/${encodeURIComponent(novelId)}`,
+      `https://development.mitprogrammer.com/novel/public/api/chapters/novel/${encodeURIComponent(
+        novelId
+      )}`,
       {
         headers: {
           Accept: "application/json",
@@ -65,7 +69,9 @@ async function getChaptersData(novelId: string) {
 async function getNovelStats(novelId: string) {
   try {
     const response = await fetch(
-      `${API_BASE}/api/novels/stats/${encodeURIComponent(novelId)}`,
+      `https://development.mitprogrammer.com/novel/public/api/novels/stats/${encodeURIComponent(
+        novelId
+      )}`,
       {
         headers: {
           Accept: "application/json",

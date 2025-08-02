@@ -36,12 +36,11 @@ const AddNovelPage: React.FC = () => {
   useEffect(() => {
     fetchGenres();
   }, []);
-const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
   const fetchGenres = async () => {
     try {
       const response = await fetch(
-        `${API_BASE}/api/novels/genres`,
+        "https://development.mitprogrammer.com/novel/public/api/novels/genres",
         {
           headers: {
             Accept: "application/json",
@@ -64,7 +63,8 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
       toast.error("Failed to load genres");
     }
   };
-  
+
+  // Redirect if not admin
   if (!user || user.role !== "admin") {
     toast.error("You do not have permission to access this page");
     router.push("/");
@@ -185,6 +185,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              {/* Cover Image Upload */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Cover Image
@@ -229,6 +230,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
                 </div>
               </div>
 
+              {/* Title */}
               <div>
                 <label
                   htmlFor="title"
@@ -248,6 +250,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
                 />
               </div>
 
+              {/* Author */}
               <div>
                 <label
                   htmlFor="author"
@@ -267,6 +270,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
                 />
               </div>
 
+              {/* Publisher */}
               <div>
                 <label
                   htmlFor="publisher"
@@ -289,6 +293,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
                 />
               </div>
 
+              {/* Publishing Year */}
               <div>
                 <label
                   htmlFor="publishingYear"
@@ -313,6 +318,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
                 />
               </div>
 
+              {/* Status */}
               <div>
                 <label
                   htmlFor="status"
@@ -334,6 +340,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
                 </select>
               </div>
 
+              {/* Genres */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Genres (Select multiple)
@@ -362,6 +369,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
                 </div>
               </div>
 
+              {/* Synopsis */}
               <div>
                 <label
                   htmlFor="synopsis"
@@ -385,6 +393,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
                 />
               </div>
 
+              {/* Submit Button */}
               <div className="flex justify-end">
                 <Button
                   type="submit"

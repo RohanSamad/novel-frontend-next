@@ -25,10 +25,6 @@ const NovelRating: React.FC<NovelRatingProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAppSelector(state => state.auth);
 
-
-
-  const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-
   useEffect(() => {
     if (user?.id) {
       fetchUserRating();
@@ -44,7 +40,7 @@ const NovelRating: React.FC<NovelRatingProps> = ({
         throw new Error('No authentication token found');
       }
 
-      const response = await axios.get(`${BASE_URL}/api/novel-ratings`, {
+      const response = await axios.get(`https://development.mitprogrammer.com/novel/public/api/novel-ratings`, {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: 'application/json',
@@ -55,6 +51,7 @@ const NovelRating: React.FC<NovelRatingProps> = ({
         },
       });
 
+      // console.log('Fetch rating response:', response.data);
 
       const data = response.data.data;
       if (data) {
@@ -73,7 +70,7 @@ const NovelRating: React.FC<NovelRatingProps> = ({
     }
 
     if (value === rating) {
-      return; 
+      return; // Don't submit if rating hasn't changed
     }
 
     setIsSubmitting(true);
@@ -85,7 +82,7 @@ const NovelRating: React.FC<NovelRatingProps> = ({
       }
 
       const response = await axios.post(
-        `${BASE_URL}/api/novel-ratings`,
+        `https://development.mitprogrammer.com/novel/public/api/novel-ratings`,
         {
           novel_id: novelId,
           rating: value,
@@ -99,6 +96,7 @@ const NovelRating: React.FC<NovelRatingProps> = ({
         }
       );
 
+      // console.log('Submit rating response:', response.data);
 
       const data = response.data.data;
       setRating(data.rating);

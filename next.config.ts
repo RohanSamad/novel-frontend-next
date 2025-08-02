@@ -5,24 +5,7 @@ const nextConfig: NextConfig = {
   compress: true,
 
   images: {
-    remotePatterns: [
-      {
-         protocol: 'https',
-        hostname: 's3.eu-central-003.backblazeb2.com',
-        pathname: '/**',
-      },
-      {
-        protocol: "http",
-        hostname: "127.0.0.1",
-        port: "8000",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "development.mitprogrammer.com",
-        pathname: "/storage/**",
-      },
-    ],
+    domains: ["development.mitprogrammer.com"],
     formats: ["image/webp", "image/avif"],
   },
 
@@ -50,4 +33,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-module.exports = nextConfig;
+export default nextConfig;

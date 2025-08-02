@@ -24,6 +24,9 @@ const FeaturedNovelCarousel: React.FC<FeaturedNovelCarouselProps> = ({
   const dispatch = useAppDispatch();
   const { featuredNovels, status, error } = useAppSelector((state) => state.featured);
 
+  // const displayNovels = featuredNovels.length > 0 
+  //   ? featuredNovels 
+  //   : novels.slice(0, 5).map(novel => ({ novel })); 
   const displayNovels = useMemo(() => {
   return featuredNovels.length > 0
     ? featuredNovels

@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Novel } from "../../store/slices/novelsSlice";
-import { BookOpen, Clock, AlertCircle, Check} from "lucide-react";
+import { BookOpen, Clock, AlertCircle, Check,Loader} from "lucide-react";
 import Image from "next/image";
 
 interface NovelCardProps {
@@ -114,8 +114,8 @@ const NovelCard: React.FC<NovelCardProps> = ({
               className="absolute inset-0 w-full h-full object-cover"
               fill
               onError={() => setImageError(true)}
-              priority 
-              fetchPriority="high"  
+              priority // Don't priority load all images
+              fetchPriority="high"  // Lazy load for better performance
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
             />
           )}
@@ -129,7 +129,11 @@ const NovelCard: React.FC<NovelCardProps> = ({
               </div>
             </div>
           )}
-         
+          {isNavigating && (
+            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+              <Loader className="w-8 h-8 text-white animate-spin" />
+            </div>
+          )}
         </div>
       </div>
       <div className={`${classes.content} flex-grow flex flex-col bg-white`}>
@@ -140,7 +144,7 @@ const NovelCard: React.FC<NovelCardProps> = ({
         </h3>
         <p className="text-sm text-gray-600 mt-1">by {novel.author.name}</p>
         <div className="mt-2 flex flex-wrap gap-1">
-          {novel.genres?.slice(0, 3).map((genre) => ( 
+          {novel.genres?.slice(0, 3).map((genre) => ( // Limit genres displayed
             <span
               key={genre.id}
               className="inline-block bg-primary-100 text-primary-800 rounded-full px-2 py-0.5 text-xs"
