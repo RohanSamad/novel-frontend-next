@@ -1,19 +1,18 @@
 import HomePage from "@/components/pages/HomePage";
 import React from "react";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+
 async function getNovels() {
   try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/novels`,
-      {
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-          cache: "force-cache", // or "no-store" if it's dynamic
-        next: { revalidate: 1800 },
-      }
-    );
+    const response = await fetch(`${API_BASE}/api/novels`, {
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      cache: "force-cache",
+      next: { revalidate: 1800 },
+    });
 
     if (!response.ok) {
       throw new Error("Failed to fetch novels");
@@ -30,14 +29,14 @@ async function getNovels() {
 async function getRecentChapters() {
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/chapters/recent`, 
+      `${API_BASE}/api/chapters/recent`,
       {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
-          cache: "force-cache", // or "no-store" if it's dynamic
-        next: { revalidate: 900 }, 
+        cache: "force-cache",
+        next: { revalidate: 900 },
       }
     );
 

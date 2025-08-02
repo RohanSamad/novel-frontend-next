@@ -1,28 +1,30 @@
 import ChapterReaderClient from "@/components/pages/ChapterReaderPage";
 import { Metadata } from "next";
 
-// Server-side API calls - same as your Redux logic
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+
 async function getNovelData(novelId: string) {
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/novels/${encodeURIComponent(novelId)}`,
+      `${API_BASE}/api/novels/${encodeURIComponent(
+        novelId
+      )}`,
       {
         headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
+          Accept: "application/json",
+          "Content-Type": "application/json",
         },
-        // next: { revalidate: 3600 }
-         cache: "no-store",
+        next: { revalidate: 3600 },
       }
     );
-    
+
     if (!response.ok) {
-      throw new Error('Failed to fetch novel');
+      throw new Error("Failed to fetch novel");
     }
-    
+
     return await response.json();
   } catch (error) {
-    console.error('Error fetching novel:', error);
+    console.error("Error fetching novel:", error);
     return null;
   }
 }
@@ -30,62 +32,68 @@ async function getNovelData(novelId: string) {
 async function getChaptersData(novelId: string) {
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/chapters/novel/${encodeURIComponent(novelId)}`,
+      `${API_BASE}/api/chapters/novel/${encodeURIComponent(
+        novelId
+      )}`,
       {
         headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
+          Accept: "application/json",
+          "Content-Type": "application/json",
         },
-         cache: "no-store",
+        next: { revalidate: 3600 }, 
       }
     );
-    
+
     if (!response.ok) {
-      throw new Error('Failed to fetch chapters');
+      throw new Error("Failed to fetch chapters");
     }
-    
+
     return await response.json();
   } catch (error) {
-    console.error('Error fetching chapters:', error);
+    console.error("Error fetching chapters:", error);
     return null;
   }
 }
 
 async function getChapterData(novelId: string, chapterId: string) {
   try {
-    // This should match your Redux fetchChapterById endpoint
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/chapters/novel/${encodeURIComponent(novelId)}/${chapterId}`,
+      `${API_BASE}/api/chapters/novel/${encodeURIComponent(
+        novelId
+      )}/${chapterId}`,
       {
         headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
+          Accept: "application/json",
+          "Content-Type": "application/json",
         },
-         cache: "no-store",
+        next: { revalidate: 3600 }, 
       }
     );
-    
+
     if (!response.ok) {
-      console.error('Chapter fetch failed:', response.status, response.statusText);
-      throw new Error('Failed to fetch chapter');
+      console.error(
+        "Chapter fetch failed:",
+        response.status,
+        response.statusText
+      );
+      throw new Error("Failed to fetch chapter");
     }
-    
+
     return await response.json();
   } catch (error) {
-    console.error('Error fetching chapter:', error);
+    console.error("Error fetching chapter:", error);
     return null;
   }
 }
 
-// Generate metadata - same as your Helmet logic
-export async function generateMetadata({ 
-  params 
-}: { 
-params: Promise<{ slug: string; chapterId: string }>;
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string; chapterId: string }>;
 }): Promise<Metadata> {
-   const { slug, chapterId } = await params; // ✅ await it
+  const { slug, chapterId } = await params; 
   const novelId = slug.replace(/-/g, " ");
-  
+
   const [novelResponse, chapterResponse] = await Promise.all([
     getNovelData(novelId),
     getChapterData(novelId, chapterId),
@@ -96,8 +104,8 @@ params: Promise<{ slug: string; chapterId: string }>;
 
   if (!selectedNovel || !selectedChapter) {
     return {
-      title: 'Chapter Not Found | Novel Tavern',
-      description: 'The requested chapter could not be found.',
+      title: "Chapter Not Found | Novel Tavern",
+      description: "The requested chapter could not be found.",
     };
   }
 
@@ -110,7 +118,7 @@ params: Promise<{ slug: string; chapterId: string }>;
       .join(" ")
       .slice(0, 160)}`,
     other: {
-      'application/ld+json': JSON.stringify({
+      "application/ld+json": JSON.stringify({
         "@context": "https://schema.org",
         "@type": "Chapter",
         name: `Chapter ${selectedChapter.chapter_number}: ${selectedChapter.title}`,
@@ -135,38 +143,30 @@ params: Promise<{ slug: string; chapterId: string }>;
           .slice(0, 2)
           .join(" ")
           .slice(0, 200),
-      })
-    }
+      }),
+    },
   };
 }
 
-// Main SSR page component - same structure as your component
-export default async function ChapterReaderPage({ 
-  params 
-}: { 
+export default async function ChapterReaderPage({
+  params,
+}: {
   params: Promise<{ slug: string; chapterId: string }>;
 }) {
-    const { slug, chapterId } = await params; // ✅ await here
+  const { slug, chapterId } = await params; 
   const novelId = slug?.replace(/-/g, " ");
-  
-  
-  // Fetch all data in parallel - same as your useEffect calls
+
   const [novelResponse, chaptersResponse, chapterResponse] = await Promise.all([
     getNovelData(novelId),
     getChaptersData(novelId),
     getChapterData(novelId, chapterId),
+ 
   ]);
-
-
 
   const selectedNovel = novelResponse?.data;
   const chapters = chaptersResponse?.data || [];
   const selectedChapter = chapterResponse?.data;
-
-  // Same error handling as your component
   if (!selectedNovel || !selectedChapter) {
-  
-    
     return (
       <div className="pt-20 min-h-screen container mx-auto px-4">
         <div className="text-center py-12">
@@ -179,16 +179,13 @@ export default async function ChapterReaderPage({
           <p className="text-sm text-gray-500 mb-6">
             Debug: Novel ID: {novelId}, Chapter ID: {chapterId}
           </p>
-         
         </div>
       </div>
     );
   }
 
-  // Pass server-rendered data to client component - same data structure
   return (
     <>
-      {/* Structured Data for SEO - same as your Helmet script */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -220,7 +217,7 @@ export default async function ChapterReaderPage({
           }),
         }}
       />
-      
+
       <ChapterReaderClient
         selectedNovel={selectedNovel}
         chapters={chapters}

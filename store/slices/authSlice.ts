@@ -35,7 +35,7 @@ export const login = createAsyncThunk(
 
       const response = await axios.post(`${API_BASE_URL}/api/login`, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          // 'Content-Type': 'multipart/form-data',
           Accept: 'application/json',
         },
       });

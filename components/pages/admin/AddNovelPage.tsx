@@ -36,11 +36,12 @@ const AddNovelPage: React.FC = () => {
   useEffect(() => {
     fetchGenres();
   }, []);
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
   const fetchGenres = async () => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/novels/genres`,
+        `${API_BASE}/api/novels/genres`,
         {
           headers: {
             Accept: "application/json",
@@ -63,8 +64,7 @@ const AddNovelPage: React.FC = () => {
       toast.error("Failed to load genres");
     }
   };
-
-  // Redirect if not admin
+  
   if (!user || user.role !== "admin") {
     toast.error("You do not have permission to access this page");
     router.push("/");
@@ -185,7 +185,6 @@ const AddNovelPage: React.FC = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              {/* Cover Image Upload */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Cover Image
@@ -230,7 +229,6 @@ const AddNovelPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Title */}
               <div>
                 <label
                   htmlFor="title"
@@ -250,7 +248,6 @@ const AddNovelPage: React.FC = () => {
                 />
               </div>
 
-              {/* Author */}
               <div>
                 <label
                   htmlFor="author"
@@ -270,7 +267,6 @@ const AddNovelPage: React.FC = () => {
                 />
               </div>
 
-              {/* Publisher */}
               <div>
                 <label
                   htmlFor="publisher"
@@ -293,7 +289,6 @@ const AddNovelPage: React.FC = () => {
                 />
               </div>
 
-              {/* Publishing Year */}
               <div>
                 <label
                   htmlFor="publishingYear"
@@ -318,7 +313,6 @@ const AddNovelPage: React.FC = () => {
                 />
               </div>
 
-              {/* Status */}
               <div>
                 <label
                   htmlFor="status"
@@ -340,7 +334,6 @@ const AddNovelPage: React.FC = () => {
                 </select>
               </div>
 
-              {/* Genres */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Genres (Select multiple)
@@ -369,7 +362,6 @@ const AddNovelPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Synopsis */}
               <div>
                 <label
                   htmlFor="synopsis"
@@ -393,7 +385,6 @@ const AddNovelPage: React.FC = () => {
                 />
               </div>
 
-              {/* Submit Button */}
               <div className="flex justify-end">
                 <Button
                   type="submit"

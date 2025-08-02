@@ -24,7 +24,7 @@ const initialState: FeaturedState = {
   error: null,
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_BASE_URL =  process.env.NEXT_PUBLIC_API_URL;
 
 export const fetchFeaturedNovels = createAsyncThunk(
   'featured/fetchFeaturedNovels',
@@ -43,7 +43,6 @@ export const fetchFeaturedNovels = createAsyncThunk(
         },
       });
 
-      // console.log('Fetch featured novels response:', response.data);
 
       const featuredNovels = Array.isArray(response.data.data)
         ? response.data.data
@@ -123,7 +122,6 @@ export const addFeaturedNovel = createAsyncThunk(
         },
       });
 
-      // console.log('Add featured novel response:', response.data);
 
       const addedFeatured = response.data.data;
       if (!addedFeatured || !addedFeatured.id) {
@@ -183,7 +181,6 @@ export const removeFeaturedNovel = createAsyncThunk(
         },
       });
 
-      // console.log('Remove featured novel response:', response.data);
 
       if (response.data.message !== 'Featured novel removed successfully') {
         throw new Error('Remove operation failed');

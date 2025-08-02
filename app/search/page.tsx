@@ -1,14 +1,11 @@
-
-
-
 import SearchResultsPage from "@/components/pages/SearchResultsPage";
 
 interface SearchPageProps {
-  searchParams: Promise<{ q?: string }>; // ✅ Promise type
+  searchParams: Promise<{ q?: string }>;
 }
 
-const Page = async ({ searchParams }: SearchPageProps) => { // ✅ async function
-  const { q } = await searchParams; // ✅ await the Promise
+const Page = async ({ searchParams }: SearchPageProps) => {
+  const { q } = await searchParams;
   const query = q || "";
   return <SearchResultsPage query={query} />;
 };

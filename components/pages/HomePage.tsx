@@ -37,7 +37,7 @@ const NovelGrid = memo(({ novels }: { novels: Novel[] }) => (
   </div>
 ));
 
-NovelGrid.displayName = 'NovelGrid';
+NovelGrid.displayName = "NovelGrid";
 
 const HomePage: React.FC<HomePageProps> = ({
   initialNovels = [],
@@ -54,12 +54,12 @@ const HomePage: React.FC<HomePageProps> = ({
 
   const displayNovels = initialNovels.length > 0 ? initialNovels : novels;
 
-  const {  featuredNovels, newestNovels } = useMemo(() => {
+  const { featuredNovels, newestNovels } = useMemo(() => {
     const sorted = [...displayNovels].sort(
       (a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
-    
+
     return {
       sortedNovels: sorted,
       featuredNovels: sorted.slice(0, 5),
