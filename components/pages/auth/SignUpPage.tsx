@@ -68,6 +68,7 @@ const SignUpPage: React.FC = () => {
 
       if (user && token) {
         localStorage.setItem("auth_token", token);
+        localStorage.setItem("auth_user", JSON.stringify(user));
         toast.success("Account created successfully!");
         router.push("/");
       } else {

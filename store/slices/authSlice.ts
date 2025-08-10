@@ -50,6 +50,7 @@ export const login = createAsyncThunk(
 
       // Store token for future authenticated requests
       localStorage.setItem('auth_token', token);
+      localStorage.setItem('auth_user', JSON.stringify(user));
 
       return {
         id: user.id.toString(), // Convert id to string to match User interface
@@ -92,6 +93,7 @@ export const register = createAsyncThunk(
 
       // Store token for future authenticated requests
       localStorage.setItem('auth_token', token);
+      localStorage.setItem('auth_user', JSON.stringify(user));
 
       return {
         id: user.id.toString(), // Convert id to string to match User interface
