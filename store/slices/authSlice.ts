@@ -1,5 +1,6 @@
+import api from '@/lib/Api';
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import axios from 'axios';
+// import axios from 'axios';
 
 interface User {
   id: string;
@@ -33,7 +34,7 @@ export const login = createAsyncThunk(
       formData.append('email', email);
       formData.append('password', password);
 
-      const response = await axios.post(`${API_BASE_URL}/api/login`, formData, {
+      const response = await api.post(`${API_BASE_URL}/api/login`, formData, {
         headers: {
           // 'Content-Type': 'multipart/form-data',
           Accept: 'application/json',
@@ -75,7 +76,7 @@ export const register = createAsyncThunk(
       formData.append('password', password);
       formData.append('password_confirmation', password);
 
-      const response = await axios.post(`${API_BASE_URL}/api/register`, formData, {
+      const response = await api.post(`${API_BASE_URL}/api/register`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Accept: 'application/json',
@@ -111,7 +112,7 @@ export const checkSession = createAsyncThunk(
       const token = localStorage.getItem('auth_token');
       if (!token) return null;
 
-      const response = await axios.get(`${API_BASE_URL}/api/check-session`, {
+      const response = await api.get(`${API_BASE_URL}/api/check-session`, {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: 'application/json',
@@ -145,7 +146,7 @@ export const logout = createAsyncThunk(
     try {
       const token = localStorage.getItem('auth_token');
       if (token) {
-        await axios.post(
+        await api.post(
           `${API_BASE_URL}/api/logout`,
           {},
           {

@@ -1,11 +1,11 @@
 "use client";
 import React, { useState } from "react";
-import axios from "axios";
 import { BookOpen, Mail, Lock, User } from "lucide-react";
 import Button from "../../ui/Button";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import api from "@/lib/Api";
 
 const SignUpPage: React.FC = () => {
   const [username, setUsername] = useState("");
@@ -24,25 +24,21 @@ const SignUpPage: React.FC = () => {
 
     if (!username || !email || !password || !confirmPassword) {
       toast.error("Please fill in all fields");
-      console.error("Please fill in all fields");
       return;
     }
 
     if (password !== confirmPassword) {
       toast.error("Passwords do not match");
-      console.error("Passwords do not match");
       return;
     }
 
     if (password.length < 6) {
       toast.error("Password must be at least 6 characters");
-      console.error("Password must be at least 6 characters");
       return;
     }
 
     if (!acceptTerms) {
       toast.error("Please accept the Terms and Privacy Policy");
-      console.error("Please accept the Terms and Privacy Policy");
       return;
     }
 
@@ -55,7 +51,7 @@ const SignUpPage: React.FC = () => {
       formData.append("password", password);
       formData.append("password_confirmation", password);
       console.log("Sendign Request ", formData);
-      const response = await axios.post(
+      const response = await api.post(
         `${API_BASE_URL}/api/register`,
         formData,
         {
@@ -201,7 +197,7 @@ const SignUpPage: React.FC = () => {
               type="checkbox"
               checked={acceptTerms}
               onChange={(e) => setAcceptTerms(e.target.checked)}
-              className="h-4 w-4 border-2 border-gray-300 rounded"
+              className="h-4 w-4 border-2 border-gray-300 rounded appearance-auto"
             />
             <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
               I agree to the{" "}
