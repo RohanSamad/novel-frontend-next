@@ -16,7 +16,7 @@ const SignUpPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
-  const API_BASE_URL =process.env.NEXT_PUBLIC_API_URL;
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,21 +24,25 @@ const SignUpPage: React.FC = () => {
 
     if (!username || !email || !password || !confirmPassword) {
       toast.error("Please fill in all fields");
+      console.error("Please fill in all fields");
       return;
     }
 
     if (password !== confirmPassword) {
       toast.error("Passwords do not match");
+      console.error("Passwords do not match");
       return;
     }
 
     if (password.length < 6) {
       toast.error("Password must be at least 6 characters");
+      console.error("Password must be at least 6 characters");
       return;
     }
 
     if (!acceptTerms) {
       toast.error("Please accept the Terms and Privacy Policy");
+      console.error("Please accept the Terms and Privacy Policy");
       return;
     }
 
@@ -50,7 +54,7 @@ const SignUpPage: React.FC = () => {
       formData.append("email", email);
       formData.append("password", password);
       formData.append("password_confirmation", password);
-
+      console.log("Sendign Request ", formData);
       const response = await axios.post(
         `${API_BASE_URL}/api/register`,
         formData,
@@ -59,8 +63,10 @@ const SignUpPage: React.FC = () => {
             "Content-Type": "multipart/form-data",
             Accept: "application/json",
           },
+          withCredentials: true,
         }
       );
+      console.log("Response received: ", response.data);
 
       const { user, token } = response.data;
 
@@ -71,7 +77,7 @@ const SignUpPage: React.FC = () => {
       } else {
         toast.error("Invalid response from server");
       }
-    }  finally {
+    } finally {
       setIsLoading(false);
     }
   };
@@ -195,22 +201,33 @@ const SignUpPage: React.FC = () => {
               type="checkbox"
               checked={acceptTerms}
               onChange={(e) => setAcceptTerms(e.target.checked)}
-              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+              className="h-4 w-4 border-2 border-gray-300 rounded"
             />
             <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
               I agree to the{" "}
-              <Link href="/terms" className="font-medium text-primary-600 hover:text-primary-500">
+              <Link
+                href="/terms"
+                className="font-medium text-primary-600 hover:text-primary-500"
+              >
                 Terms of Service
               </Link>{" "}
               and{" "}
-              <Link href="/privacy" className="font-medium text-primary-600 hover:text-primary-500">
+              <Link
+                href="/privacy"
+                className="font-medium text-primary-600 hover:text-primary-500"
+              >
                 Privacy Policy
               </Link>
             </label>
           </div>
 
           <div>
-            <Button type="submit" variant="primary" size="full" isLoading={isLoading}>
+            <Button
+              type="submit"
+              variant="primary"
+              size="full"
+              isLoading={isLoading}
+            >
               Create Account
             </Button>
           </div>
@@ -218,7 +235,10 @@ const SignUpPage: React.FC = () => {
 
         <p className="mt-8 text-center text-sm text-gray-600">
           Already have an account?{" "}
-          <Link href="/signin" className="font-medium text-primary-600 hover:text-primary-500">
+          <Link
+            href="/signin"
+            className="font-medium text-primary-600 hover:text-primary-500"
+          >
             Sign in
           </Link>
         </p>

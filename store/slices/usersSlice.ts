@@ -1,44 +1,44 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import axios from 'axios';
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import axios from "axios";
 
 export interface User {
   id: string;
   email: string;
   username: string;
-  role: 'user' | 'admin';
+  role: "user" | "admin";
   created_at: string;
   last_sign_in_at?: string;
 }
 
 interface UsersState {
   users: User[];
-  status: 'idle' | 'loading' | 'succeeded' | 'failed';
+  status: "idle" | "loading" | "succeeded" | "failed";
   error: string | null;
 }
 
 const initialState: UsersState = {
   users: [],
-  status: 'idle',
+  status: "idle",
   error: null,
 };
 
-;
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL; 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const fetchUsers = createAsyncThunk(
-  'users/fetchUsers',
+  "users/fetchUsers",
   async (_, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem("auth_token");
       if (!token) {
-        throw new Error('No authentication token found');
+        throw new Error("No authentication token found");
       }
 
       const response = await axios.get(`${API_BASE_URL}/api/users`, {
         headers: {
           Authorization: `Bearer ${token}`,
-          Accept: 'application/json',
+          Accept: "application/json",
         },
+        withCredentials: true,
       });
 
       const users = response.data; // Expect [{ id, email, username, role, created_at, last_sign_in_at }]
@@ -47,108 +47,133 @@ export const fetchUsers = createAsyncThunk(
         id: user.id.toString(), // Convert id to string to match User interface
         email: user.email,
         username: user.username,
-        role: user.role || 'user',
+        role: user.role || "user",
         created_at: user.created_at,
         last_sign_in_at: user.last_sign_in_at,
       })) as User[];
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || error.message || 'Failed to fetch users');
+      return rejectWithValue(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to fetch users"
+      );
     }
   }
 );
 
 export const updateUserRole = createAsyncThunk(
-  'users/updateUserRole',
-  async ({ userId, role }: { userId: string; role: 'user' | 'admin' }, { rejectWithValue }) => {
+  "users/updateUserRole",
+  async (
+    { userId, role }: { userId: string; role: "user" | "admin" },
+    { rejectWithValue }
+  ) => {
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem("auth_token");
       if (!token) {
-        throw new Error('No authentication token found');
+        throw new Error("No authentication token found");
       }
 
       const formData = new FormData();
       formData.append(userId, userId);
-      formData.append('role', role);
+      formData.append("role", role);
 
-      const response = await axios.post(`${API_BASE_URL}/api/users/role`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-          Accept: 'application/json',
-        },
-      });
+      const response = await axios.post(
+        `${API_BASE_URL}/api/users/role`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+        }
+      );
 
       const { userId: updatedUserId, role: updatedRole } = response.data; // Expect { userId, role }
 
       return { userId: updatedUserId.toString(), role: updatedRole };
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || error.message || 'Failed to update user role');
+      return rejectWithValue(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to update user role"
+      );
     }
   }
 );
 
 export const deleteUser = createAsyncThunk(
-  'users/deleteUser',
+  "users/deleteUser",
   async (userId: string, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem("auth_token");
       if (!token) {
-        throw new Error('No authentication token found');
+        throw new Error("No authentication token found");
       }
 
       const formData = new FormData();
-      formData.append('userId', userId);
+      formData.append("userId", userId);
 
-      const response = await axios.post(`${API_BASE_URL}/api/delete-users`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-          Accept: 'application/json',
-        },
-      });
+      const response = await axios.post(
+        `${API_BASE_URL}/api/delete-users`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+        }
+      );
 
       const { userId: deletedUserId } = response.data; // Expect { message, userId }
 
       return deletedUserId.toString(); // Convert to string to match User interface
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || error.message || 'Failed to delete user');
+      return rejectWithValue(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to delete user"
+      );
     }
   }
 );
 
 const usersSlice = createSlice({
-  name: 'users',
+  name: "users",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(fetchUsers.pending, (state) => {
-        state.status = 'loading';
+        state.status = "loading";
       })
       .addCase(fetchUsers.fulfilled, (state, action: PayloadAction<User[]>) => {
-        state.status = 'succeeded';
+        state.status = "succeeded";
         state.users = action.payload;
       })
       .addCase(fetchUsers.rejected, (state, action) => {
-        state.status = 'failed';
+        state.status = "failed";
         state.error = action.payload as string;
       })
       .addCase(updateUserRole.fulfilled, (state, action) => {
         const { userId, role } = action.payload;
-        const user = state.users.find(u => u.id === userId);
+        const user = state.users.find((u) => u.id === userId);
         if (user) {
           user.role = role;
         }
       })
       .addCase(updateUserRole.rejected, (state, action) => {
-        state.status = 'failed';
+        state.status = "failed";
         state.error = action.payload as string;
       })
       .addCase(deleteUser.fulfilled, (state, action) => {
-        state.users = state.users.filter(user => user.id !== action.payload);
+        state.users = state.users.filter((user) => user.id !== action.payload);
       })
       .addCase(deleteUser.rejected, (state, action) => {
-        state.status = 'failed';
+        state.status = "failed";
         state.error = action.payload as string;
       });
   },

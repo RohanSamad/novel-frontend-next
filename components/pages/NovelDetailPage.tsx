@@ -113,7 +113,6 @@ const NovelHeader = memo(
     novel,
     novelStats,
     totalChapters,
-    chapters,
     onStartReading,
     onRateClick,
     user,
@@ -123,7 +122,6 @@ const NovelHeader = memo(
     novelStats: NovelStats;
     totalChapters: number;
     onStartReading: () => void;
-    chapters?:Chapter[];
     onRateClick: () => void;
     user: {
       id?: string;
@@ -602,7 +600,7 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
               {/* End of chapters indicator */}
               {!hasMoreChapters && chapters.length > 0 && chapters.length >= totalChapters && (
                 <div className="p-6 text-center text-gray-500">
-                  You've reached the end of all chapters.
+                  You&apos;ve reached the end of all chapters.
                 </div>
               )}
             </div>

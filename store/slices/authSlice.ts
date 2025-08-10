@@ -38,6 +38,7 @@ export const login = createAsyncThunk(
           // 'Content-Type': 'multipart/form-data',
           Accept: 'application/json',
         },
+          withCredentials: true,
       });
 
       const { user, token } = response.data; // Expect { user: { id, email, username, role, ... }, token }
@@ -79,6 +80,7 @@ export const register = createAsyncThunk(
           'Content-Type': 'multipart/form-data',
           Accept: 'application/json',
         },
+          withCredentials: true,
       });
 
       const { user, token } = response.data; // Expect { user: { id, email, username, role }, token }
@@ -114,6 +116,7 @@ export const checkSession = createAsyncThunk(
           Authorization: `Bearer ${token}`,
           Accept: 'application/json',
         },
+          withCredentials: true,
       });
 
       const user = response.data; // Expect { id, email, username, role }
@@ -150,6 +153,7 @@ export const logout = createAsyncThunk(
               Authorization: `Bearer ${token}`,
               Accept: 'application/json',
             },
+          withCredentials: true,
           }
         );
       }
