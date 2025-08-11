@@ -117,7 +117,6 @@ export const fetchNovels = createAsyncThunk(
   }
 );
 
-
 export const fetchNovelById = createAsyncThunk(
   "novels/fetchNovelById",
   async (id: string, { rejectWithValue }) => {
@@ -429,6 +428,9 @@ export const updateNovel = createAsyncThunk(
   }
 );
 
+// Replace your createNovel action with this fetch-based version
+// Sometimes Axios has issues with FormData
+
 export const createNovel = createAsyncThunk(
   "novels/createNovel",
   async (data: FormData, { rejectWithValue }) => {
@@ -438,17 +440,69 @@ export const createNovel = createAsyncThunk(
         return rejectWithValue("No authentication token found");
       }
 
-      const response = await axios.post(`${API_BASE_URL}/api/novels`, data, {
+      console.log("🌐 === FETCH REQUEST DEBUG START ===");
+      
+      // Debug FormData contents before sending
+      console.log("FormData contents before fetch request:");
+      let fileFound = false;
+      for (const [key, value] of data.entries()) {
+        if (value instanceof File) {
+          console.log(`${key} (File):`, {
+            name: value.name,
+            size: value.size,
+            type: value.type,
+            lastModified: value.lastModified,
+          });
+          fileFound = true;
+          
+          // Test if file has content by reading a small portion
+          try {
+            const slice = value.slice(0, 100);
+            const arrayBuffer = await slice.arrayBuffer();
+            console.log(`File ${key} first 100 bytes length:`, arrayBuffer.byteLength);
+            console.log(`File ${key} first 10 bytes:`, new Uint8Array(arrayBuffer.slice(0, 10)));
+          } catch (e) {
+            console.error(`Error reading file ${key}:`, e);
+          }
+        } else {
+          console.log(`${key}:`, value);
+        }
+      }
+
+      if (!fileFound) {
+        throw new Error("No file found in FormData!");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/novels`, {
+        method: 'POST',
         headers: {
-          "Content-Type": "multipart/form-data",
-          Accept: "application/json",
-          Authorization: `Bearer ${token}`,
+          // Do NOT set Content-Type - let fetch handle it
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
+        body: data, // FormData object
       });
 
-      // console.log("Create novel response:", response.data);
+      console.log("Response status:", response.status);
+      console.log("Response headers:", Object.fromEntries(response.headers.entries()));
 
-      const createdNovel = response.data.data;
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("❌ API Error Response:", errorText);
+        
+        try {
+          const errorJson = JSON.parse(errorText);
+          throw new Error(errorJson.message || errorJson.error || 'Failed to create novel');
+        } catch (parseError) {
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+      }
+
+      const result = await response.json();
+      console.log("✅ API Response received:", result);
+      console.log("🌐 === FETCH REQUEST DEBUG END ===");
+
+      const createdNovel = result.data;
 
       return {
         id: createdNovel.id.toString(),
@@ -474,12 +528,8 @@ export const createNovel = createAsyncThunk(
         updated_at: createdNovel.updated_at || "",
       } as Novel;
     } catch (error: any) {
-      console.error("Create novel error:", error.response || error);
-      return rejectWithValue(
-        error.response?.data?.message ||
-          error.message ||
-          "Failed to create novel"
-      );
+      console.error("❌ Create novel error:", error);
+      return rejectWithValue(error.message || "Failed to create novel");
     }
   }
 );

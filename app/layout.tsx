@@ -49,6 +49,7 @@ export default function RootLayout({
             {children}
           <Footer/>
           <ToasterProvider/>
+        {/* <AuthDebug/> */}
         </Providers>
       </body>
     </html>

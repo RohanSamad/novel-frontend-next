@@ -297,13 +297,13 @@ const EditNovelPage = () => {
                   <div className="w-32 h-44 bg-gray-100 rounded-lg overflow-hidden">
                     {formData.coverImage ? (
                       <div className="w-full h-full relative">
-                        <Image
+                        {/* <Image
                           src={URL.createObjectURL(formData.coverImage)}
                           alt="Cover preview"
                           fill
                           className="object-cover"
                           unoptimized
-                        />
+                        /> */}
                       </div>
                     ) : selectedNovel?.cover_image_url ? (
                       <div className="w-full h-full relative">

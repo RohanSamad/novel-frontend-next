@@ -19,9 +19,10 @@ const AddNovelPage: React.FC = () => {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
-  const { status } = useAppSelector((state) => state.novels); // No need for selectedNovel
+  const { status } = useAppSelector((state) => state.novels);
   const [isLoading, setIsLoading] = useState(false);
   const [genres, setGenres] = useState<Genre[]>([]);
+  const [hasCheckedPermission, setHasCheckedPermission] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     author: "",
@@ -33,22 +34,34 @@ const AddNovelPage: React.FC = () => {
     selectedGenres: [] as string[],
   });
 
+  // Handle permission check in useEffect
   useEffect(() => {
-    fetchGenres();
-  }, []);
-const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+    if (user !== undefined) {
+      if (!user || user.role !== "admin") {
+        toast.error("You do not have permission to access this page");
+        router.push("/");
+        return;
+      }
+      setHasCheckedPermission(true);
+    }
+  }, [user, router]);
+
+  useEffect(() => {
+    if (hasCheckedPermission) {
+      fetchGenres();
+    }
+  }, [hasCheckedPermission]);
+
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
   const fetchGenres = async () => {
     try {
-      const response = await fetch(
-        `${API_BASE}/api/novels/genres`,
-        {
-          headers: {
-            Accept: "application/json",
-          },
-          cache: "no-store",
-        }
-      );
+      const response = await fetch(`${API_BASE}/api/novels/genres`, {
+        headers: {
+          Accept: "application/json",
+        },
+        cache: "no-store",
+      });
       const data = await response.json();
       setGenres(
         Array.isArray(data.data)
@@ -64,13 +77,9 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
       toast.error("Failed to load genres");
     }
   };
-  
-  if (!user || user.role !== "admin") {
-    toast.error("You do not have permission to access this page");
-    router.push("/");
-  }
 
-  if (status === "loading") {
+  // Show loading while checking permissions or if status is loading
+  if (!hasCheckedPermission || status === "loading") {
     return (
       <div className="pt-20 min-h-screen bg-gray-50 flex justify-center items-center">
         <LoadingSpinner size="large" />
@@ -79,22 +88,68 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
   }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      if (!file.type.startsWith("image/")) {
-        toast.error("Please select an image file");
-        return;
-      }
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error("Image size must be less than 2MB");
-        return;
-      }
-      setFormData((prev) => ({
-        ...prev,
-        coverImage: file,
-      }));
+    console.log("🖼️ === FILE SELECTION DEBUG START ===");
+    console.log("1. Event triggered:", e.type);
+    console.log("2. Input element:", e.target);
+    console.log("3. Files property:", e.target.files);
+
+    if (!e.target.files || e.target.files.length === 0) {
+      console.log("❌ No files selected");
+      setFormData((prev) => ({ ...prev, coverImage: null }));
+      return;
     }
+
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      const result = event.target?.result;
+      if (result) {
+        console.log(
+          "✅ File is readable, data length:",
+          typeof result === "string" ? result.length : result.byteLength
+        );
+      } else {
+        console.log("❌ File read but no result");
+      }
+    };
+    reader.onerror = function (error) {
+      console.log("❌ File read error:", error);
+    };
+    reader.readAsDataURL(file);
+
+    // Validate file
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      console.error("❌ Invalid file type:", file.type);
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image size must be less than 2MB");
+      console.error("❌ File too large:", file.size);
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size === 0) {
+      toast.error("Selected file is empty");
+      console.error("❌ Empty file selected");
+      e.target.value = "";
+      return;
+    }
+
+    console.log("7. Setting file in state...");
+    setFormData((prev) => {
+      const newState = { ...prev, coverImage: file };
+      console.log("8. New state coverImage:", newState.coverImage);
+      return newState;
+    });
+
+    console.log("🖼️ === FILE SELECTION DEBUG END ===");
   };
+
+  // Add this button to your form (temporarily):
 
   const handleGenreToggle = (genreId: string) => {
     setFormData((prev) => ({
@@ -108,6 +163,45 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    console.log("🚀 === FORM SUBMISSION DEBUG START ===");
+    console.log("1. Form data state:", formData);
+    console.log("2. Cover image from state:", formData.coverImage);
+
+    if (formData.coverImage) {
+      console.log("3. Cover image details from state:", {
+        name: formData.coverImage.name,
+        size: formData.coverImage.size,
+        type: formData.coverImage.type,
+        lastModified: formData.coverImage.lastModified,
+        constructor: formData.coverImage.constructor.name,
+      });
+
+      // Test if the file is still readable
+      console.log("4. Testing if file is still readable...");
+      try {
+        const reader = new FileReader();
+        const readPromise = new Promise((resolve, reject) => {
+          reader.onload = () => {
+            console.log("✅ File still readable from state");
+            resolve(true);
+          };
+          reader.onerror = () => {
+            console.log("❌ File no longer readable from state");
+            reject(false);
+          };
+        });
+        reader.readAsDataURL(formData.coverImage);
+        await readPromise;
+      } catch (error) {
+        console.log("❌ File read test failed:", error);
+      }
+    } else {
+      console.log("❌ No cover image in state!");
+      toast.error("Please select a cover image");
+      return;
+    }
+
+    // ... your existing validation code ...
     if (!user || user.role !== "admin") {
       toast.error("You do not have permission to perform this action");
       return;
@@ -131,27 +225,77 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
     setIsLoading(true);
 
     try {
-      if (!formData.coverImage) {
-        throw new Error("Please select a cover image");
-      }
-
+      console.log("5. Creating FormData...");
       const formDataToSend = new FormData();
-      formDataToSend.append("title", formData.title);
-      formDataToSend.append("author", formData.author);
-      formDataToSend.append("publisher", formData.publisher);
+
+      // Add text fields
+      formDataToSend.append("title", formData.title.trim());
+      formDataToSend.append("author", formData.author.trim());
+      formDataToSend.append("publisher", formData.publisher.trim());
       formDataToSend.append("publishing_year", formData.publishingYear);
-      formDataToSend.append("synopsis", formData.synopsis);
+      formDataToSend.append("synopsis", formData.synopsis.trim());
       formDataToSend.append("status", formData.status);
+
+      // Add genres
       formData.selectedGenres.forEach((genreId) =>
         formDataToSend.append("genres[]", genreId)
       );
-      formDataToSend.append("cover_image", formData.coverImage);
 
+      console.log("6. About to append file to FormData...");
+      console.log("   File object before append:", formData.coverImage);
+
+      // Append file
+      formDataToSend.append(
+        "cover_image",
+        formData.coverImage,
+        formData.coverImage.name
+      );
+
+      console.log("7. File appended to FormData");
+
+      // Verify FormData contents
+      console.log("8. Checking FormData contents...");
+      for (const [key, value] of formDataToSend.entries()) {
+        if (value instanceof File) {
+          console.log(`   ${key} (File):`, {
+            name: value.name,
+            size: value.size,
+            type: value.type,
+            lastModified: value.lastModified,
+          });
+
+          // Test if file in FormData is readable
+          const testReader = new FileReader();
+          testReader.onload = () => {
+            console.log(`   ✅ File ${key} in FormData is readable`);
+          };
+          testReader.onerror = () => {
+            console.log(`   ❌ File ${key} in FormData is NOT readable`);
+          };
+          testReader.readAsDataURL(value);
+        } else {
+          console.log(`   ${key}:`, value);
+        }
+      }
+
+      // Additional verification
+      const fileFromFormData = formDataToSend.get("cover_image");
+      console.log("9. File retrieved from FormData:", fileFromFormData);
+      if (fileFromFormData instanceof File) {
+        console.log("   Retrieved file details:", {
+          name: fileFromFormData.name,
+          size: fileFromFormData.size,
+          type: fileFromFormData.type,
+        });
+      }
+
+      console.log("10. Dispatching createNovel...");
       await dispatch(createNovel(formDataToSend)).unwrap();
 
       toast.success("Novel added successfully");
       router.push("/admin/novels");
     } catch (error: unknown) {
+      console.error("❌ Novel creation failed:", error);
       if (error instanceof Error) {
         toast.error(error.message);
       } else {
@@ -159,6 +303,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
       }
     } finally {
       setIsLoading(false);
+      console.log("🚀 === FORM SUBMISSION DEBUG END ===");
     }
   };
 
@@ -185,6 +330,14 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              {/* // Alternative solution using regular img tag: */}
+              {/* <button
+                type="button"
+                onClick={testSimpleUpload}
+                className="px-4 py-2 bg-blue-500 text-white rounded"
+              >
+                Test Simple Upload
+              </button> */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Cover Image
@@ -192,14 +345,10 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
                 <div className="flex items-center space-x-4">
                   <div className="w-32 h-44 bg-gray-100 rounded-lg overflow-hidden">
                     {formData.coverImage ? (
-                      <Image
+                      <img
                         src={URL.createObjectURL(formData.coverImage)}
                         alt="Cover preview"
-                        fill
-                        style={{
-                          objectFit: "cover",
-                        }}
-                        unoptimized={true}
+                        className="object-cover w-full h-full"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -225,6 +374,12 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
                     <p className="mt-2 text-xs text-gray-500">
                       Max size: 2MB. Formats: PNG, JPEG, WebP
                     </p>
+                    {formData.coverImage && (
+                      <p className="mt-1 text-xs text-green-600">
+                        ✅ {formData.coverImage.name} (
+                        {Math.round(formData.coverImage.size / 1024)}KB)
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -342,7 +497,11 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
                   {genres.map((genre) => (
                     <label
                       key={genre.id}
-                      className="relative flex items-start p-3 rounded-lg border cursor-pointer focus:outline-none"
+                      className={`${
+                        formData.selectedGenres.includes(genre.id)
+                          ? "border-blue-500"
+                          : ""
+                      } relative flex items-start p-3 rounded-lg border cursor-pointer focus:outline-none`}
                     >
                       <div className="min-w-0 flex-1 text-sm">
                         <div className="font-medium text-gray-700">
@@ -354,7 +513,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
                           type="checkbox"
                           checked={formData.selectedGenres.includes(genre.id)}
                           onChange={() => handleGenreToggle(genre.id)}
-                          className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                          className="h-4 w-4 text-primary-600 appearance-auto border-gray-300 rounded focus:ring-primary-500"
                         />
                       </div>
                     </label>

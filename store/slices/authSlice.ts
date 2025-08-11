@@ -1,6 +1,6 @@
 import api from '@/lib/Api';
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-// import axios from 'axios';
+import { getLocalStorageItem, setLocalStorageItem, removeLocalStorageItem } from '@/hooks/useLocalStorage';
 
 interface User {
   id: string;
@@ -14,6 +14,7 @@ interface AuthState {
   user: User | null;
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
+  isInitialized: boolean;
 }
 
 const initialState: AuthState = {
@@ -21,9 +22,9 @@ const initialState: AuthState = {
   user: null,
   status: 'idle',
   error: null,
+  isInitialized: false,
 };
 
-// Safely access environment variable with fallback
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const login = createAsyncThunk(
@@ -36,24 +37,22 @@ export const login = createAsyncThunk(
 
       const response = await api.post(`${API_BASE_URL}/api/login`, formData, {
         headers: {
-          // 'Content-Type': 'multipart/form-data',
           Accept: 'application/json',
         },
-          withCredentials: true,
+        withCredentials: true,
       });
 
-      const { user, token } = response.data; // Expect { user: { id, email, username, role, ... }, token }
+      const { user, token } = response.data;
 
       if (!user || !user.id || !user.email) {
         throw new Error('No user data returned');
       }
 
-      // Store token for future authenticated requests
-      localStorage.setItem('auth_token', token);
-      localStorage.setItem('auth_user', JSON.stringify(user));
+      setLocalStorageItem('auth_token', token);
+      setLocalStorageItem('auth_user', JSON.stringify(user));
 
       return {
-        id: user.id.toString(), // Convert id to string to match User interface
+        id: user.id.toString(),
         email: user.email,
         username: user.username,
         role: user.role || 'user',
@@ -82,21 +81,20 @@ export const register = createAsyncThunk(
           'Content-Type': 'multipart/form-data',
           Accept: 'application/json',
         },
-          withCredentials: true,
+        withCredentials: true,
       });
 
-      const { user, token } = response.data; // Expect { user: { id, email, username, role }, token }
+      const { user, token } = response.data;
 
       if (!user || !user.id || !user.email) {
         throw new Error('No user data returned');
       }
 
-      // Store token for future authenticated requests
-      localStorage.setItem('auth_token', token);
-      localStorage.setItem('auth_user', JSON.stringify(user));
+      setLocalStorageItem('auth_token', token);
+      setLocalStorageItem('auth_user', JSON.stringify(user));
 
       return {
-        id: user.id.toString(), // Convert id to string to match User interface
+        id: user.id.toString(),
         email: user.email,
         username: user.username,
         role: user.role || 'user',
@@ -109,35 +107,89 @@ export const register = createAsyncThunk(
 
 export const checkSession = createAsyncThunk(
   'auth/checkSession',
-  async (_, {  }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem('auth_token');
-      if (!token) return null;
+      const token = getLocalStorageItem('auth_token');
+      const storedUser = getLocalStorageItem('auth_user');
+      
+      if (!token) {
+        return null;
+      }
+
+      // Try to use stored user data as fallback
+      let fallbackUser = null;
+      if (storedUser) {
+        try {
+          fallbackUser = JSON.parse(storedUser);
+        } catch (e) {
+          // Invalid stored data, ignore
+        }
+      }
 
       const response = await api.get(`${API_BASE_URL}/api/check-session`, {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: 'application/json',
         },
-          withCredentials: true,
+        withCredentials: true,
       });
 
-      const user = response.data; // Expect { id, email, username, role }
+      const user = response.data;
 
       if (!user || !user.id || !user.email) {
-        localStorage.removeItem('auth_token');
+        // If we have valid fallback user data, use it instead of clearing everything
+        if (fallbackUser && fallbackUser.id && fallbackUser.email) {
+          return {
+            id: fallbackUser.id.toString(),
+            email: fallbackUser.email,
+            username: fallbackUser.username,
+            role: fallbackUser.role || 'user',
+          };
+        }
+        
+        removeLocalStorageItem('auth_token');
+        removeLocalStorageItem('auth_user');
         return null;
       }
 
+      // Update localStorage with fresh user data
+      setLocalStorageItem('auth_user', JSON.stringify(user));
+
       return {
-        id: user.id.toString(), // Convert id to string to match User interface
+        id: user.id.toString(),
         email: user.email,
         username: user.username,
         role: user.role || 'user',
       };
     } catch (error: any) {
-      localStorage.removeItem('auth_token');
-      return null;
+      // More conservative approach - don't clear localStorage immediately on network errors
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        removeLocalStorageItem('auth_token');
+        removeLocalStorageItem('auth_user');
+        return rejectWithValue('Session expired');
+      }
+      
+      // For other errors (network issues, server errors), try to use stored data
+      const storedUser = getLocalStorageItem('auth_user');
+      if (storedUser) {
+        try {
+          const fallbackUser = JSON.parse(storedUser);
+          if (fallbackUser && fallbackUser.id && fallbackUser.email) {
+            return {
+              id: fallbackUser.id.toString(),
+              email: fallbackUser.email,
+              username: fallbackUser.username,
+              role: fallbackUser.role || 'user',
+            };
+          }
+        } catch (e) {
+          // Invalid stored data
+        }
+      }
+      
+      removeLocalStorageItem('auth_token');
+      removeLocalStorageItem('auth_user');
+      return rejectWithValue(error.response?.data?.message || 'Session validation failed');
     }
   }
 );
@@ -146,7 +198,7 @@ export const logout = createAsyncThunk(
   'auth/logout',
   async (_, { dispatch }) => {
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = getLocalStorageItem('auth_token');
       if (token) {
         await api.post(
           `${API_BASE_URL}/api/logout`,
@@ -156,12 +208,15 @@ export const logout = createAsyncThunk(
               Authorization: `Bearer ${token}`,
               Accept: 'application/json',
             },
-          withCredentials: true,
+            withCredentials: true,
           }
         );
       }
+    } catch (error) {
+      // Even if logout API fails, we still want to clear local state
     } finally {
-      localStorage.removeItem('auth_token');
+      removeLocalStorageItem('auth_token');
+      removeLocalStorageItem('auth_user');
       dispatch(authSlice.actions.logout());
     }
   }
@@ -176,9 +231,37 @@ const authSlice = createSlice({
       state.user = null;
       state.status = 'idle';
       state.error = null;
+      state.isInitialized = true;
     },
     clearAuthError: (state) => {
       state.error = null;
+    },
+    setInitialized: (state) => {
+      state.isInitialized = true;
+    },
+    restoreFromStorage: (state) => {
+      try {
+        const token = getLocalStorageItem('auth_token');
+        const storedUser = getLocalStorageItem('auth_user');
+        
+        if (token && storedUser) {
+          const user = JSON.parse(storedUser);
+          if (user && user.id && user.email) {
+            state.isAuthenticated = true;
+            state.user = {
+              id: user.id.toString(),
+              email: user.email,
+              username: user.username,
+              role: user.role || 'user',
+            };
+            state.status = 'succeeded';
+          }
+        }
+      } catch (error) {
+        // Invalid stored data, ignore
+      } finally {
+        state.isInitialized = true;
+      }
     },
   },
   extraReducers: (builder) => {
@@ -191,10 +274,12 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.user = action.payload;
         state.status = 'succeeded';
+        state.isInitialized = true;
       })
       .addCase(login.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload as string;
+        state.isInitialized = true;
       })
       .addCase(register.pending, (state) => {
         state.status = 'loading';
@@ -204,10 +289,12 @@ const authSlice = createSlice({
         state.status = 'succeeded';
         state.isAuthenticated = true;
         state.user = action.payload;
+        state.isInitialized = true;
       })
       .addCase(register.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload as string;
+        state.isInitialized = true;
       })
       .addCase(checkSession.pending, (state) => {
         state.status = 'loading';
@@ -223,23 +310,28 @@ const authSlice = createSlice({
           state.user = null;
           state.status = 'idle';
         }
+        state.isInitialized = true;
       })
-      .addCase(checkSession.rejected, (state) => {
+      .addCase(checkSession.rejected, (state, action) => {
         state.isAuthenticated = false;
         state.user = null;
-        state.status = 'idle';
+        state.status = 'failed';
+        state.error = action.payload as string;
+        state.isInitialized = true;
       })
       .addCase(logout.pending, (state) => {
         state.status = 'loading';
       })
       .addCase(logout.fulfilled, (state) => {
         state.status = 'idle';
+        state.isInitialized = true;
       })
       .addCase(logout.rejected, (state) => {
         state.status = 'idle';
+        state.isInitialized = true;
       });
   },
 });
 
-export const { clearAuthError } = authSlice.actions;
+export const { clearAuthError, setInitialized, restoreFromStorage } = authSlice.actions;
 export default authSlice.reducer;
