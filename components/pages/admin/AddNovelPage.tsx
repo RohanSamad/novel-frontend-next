@@ -99,27 +99,38 @@ const AddNovelPage: React.FC = () => {
     }
 
     const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onload = function (event) {
-      const result = event.target?.result;
-      if (result) {
-        console.log(
-          "✅ File is readable, data length:",
-          typeof result === "string" ? result.length : result.byteLength
-        );
-      } else {
-        console.log("❌ File read but no result");
-      }
-    };
-    reader.onerror = function (error) {
-      console.log("❌ File read error:", error);
-    };
-    reader.readAsDataURL(file);
 
-    // Validate file
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
+    // Log detailed file information
+    console.log("4. File details:", {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified,
+    });
+
+    // More specific MIME type validation to match backend
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+
+    if (!allowedTypes.includes(file.type)) {
       console.error("❌ Invalid file type:", file.type);
+      console.error("❌ Allowed types:", allowedTypes);
+      toast.error(
+        `Invalid file type: ${file.type}. Please select a JPEG or PNG image.`
+      );
+      e.target.value = "";
+      return;
+    }
+
+    // Alternative: Also check file extension as backup
+    const fileName = file.name.toLowerCase();
+    const allowedExtensions = [".jpg", ".jpeg", ".png"];
+    const hasValidExtension = allowedExtensions.some((ext) =>
+      fileName.endsWith(ext)
+    );
+
+    if (!hasValidExtension) {
+      console.error("❌ Invalid file extension for:", fileName);
+      toast.error("Please select a file with .jpg, .jpeg, or .png extension");
       e.target.value = "";
       return;
     }
@@ -137,6 +148,26 @@ const AddNovelPage: React.FC = () => {
       e.target.value = "";
       return;
     }
+
+    // Test file readability
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      const result = event.target?.result;
+      if (result) {
+        console.log(
+          "✅ File is readable, data length:",
+          typeof result === "string" ? result.length : result.byteLength
+        );
+      } else {
+        console.log("❌ File read but no result");
+      }
+    };
+    reader.onerror = function (error) {
+      console.log("❌ File read error:", error);
+      toast.error("Error reading file. Please try another image.");
+      return;
+    };
+    reader.readAsDataURL(file);
 
     console.log("7. Setting file in state...");
     setFormData((prev) => {
@@ -342,12 +373,13 @@ const AddNovelPage: React.FC = () => {
                   Cover Image
                 </label>
                 <div className="flex items-center space-x-4">
-                  <div className="w-32 h-44 bg-gray-100 rounded-lg overflow-hidden">
+                  <div className="relative w-32 h-44 bg-gray-100 rounded-lg overflow-hidden">
                     {formData.coverImage ? (
                       <img
                         src={URL.createObjectURL(formData.coverImage)}
                         alt="Cover preview"
                         className="object-cover w-full h-full"
+                        style={{ position: "absolute", top: 0, left: 0 }}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -358,7 +390,7 @@ const AddNovelPage: React.FC = () => {
                   <div>
                     <input
                       type="file"
-                      accept="image/*"
+                      accept=".jpg,.jpeg,.png,image/jpeg,image/png"
                       onChange={handleImageChange}
                       className="hidden"
                       id="cover-image"
@@ -371,13 +403,18 @@ const AddNovelPage: React.FC = () => {
                       Upload Cover
                     </label>
                     <p className="mt-2 text-xs text-gray-500">
-                      Max size: 2MB. Formats: PNG, JPEG, WebP
+                      Max size: 2MB. Formats: PNG, JPEG only
                     </p>
                     {formData.coverImage && (
-                      <p className="mt-1 text-xs text-green-600">
-                        ✅ {formData.coverImage.name} (
-                        {Math.round(formData.coverImage.size / 1024)}KB)
-                      </p>
+                      <div className="mt-1">
+                        <p className="text-xs text-green-600">
+                          ✅ {formData.coverImage.name} (
+                          {Math.round(formData.coverImage.size / 1024)}KB)
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Type: {formData.coverImage.type}
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>
