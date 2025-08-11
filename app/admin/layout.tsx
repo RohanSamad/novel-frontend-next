@@ -50,6 +50,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         // No valid admin credentials found
         router.replace('/signin');
       } catch (error) {
+        console.error('Error accessing localStorage:', error);
         // Error accessing localStorage or parsing user data
         router.replace('/signin');
       }

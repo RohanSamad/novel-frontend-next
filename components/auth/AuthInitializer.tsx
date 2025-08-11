@@ -39,6 +39,7 @@ const AuthInitializer: React.FC<AuthInitializerProps> = ({ children }) => {
               dispatch(restoreFromStorage());
             }
           } catch (e) {
+            console.error('Error parsing stored user data:', e);
             // Invalid stored data, continue with API validation
           }
         }
@@ -47,6 +48,7 @@ const AuthInitializer: React.FC<AuthInitializerProps> = ({ children }) => {
         await dispatch(checkSession());
         
       } catch (error) {
+        console.error('Error during auth initialization:', error);
         // Fallback: try to restore from localStorage even if API fails
         try {
           const token = localStorage.getItem('auth_token');
@@ -60,6 +62,7 @@ const AuthInitializer: React.FC<AuthInitializerProps> = ({ children }) => {
             }
           }
         } catch (e) {
+            console.log('Error restoring from localStorage:', e);
           // If everything fails, just mark as initialized
         }
         

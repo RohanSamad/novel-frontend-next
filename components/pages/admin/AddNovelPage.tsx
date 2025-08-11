@@ -7,7 +7,6 @@ import { createNovel } from "../../../store/slices/novelsSlice";
 import Button from "../../ui/Button";
 import { toast } from "react-hot-toast";
 import LoadingSpinner from "../../ui/LoadingSpinner";
-import Image from "next/image";
 
 interface Genre {
   id: string;
