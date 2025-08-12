@@ -124,11 +124,20 @@ export async function generateMetadata({
       };
     }
 
-    const title = `${novel.title} | Novel Tavern`;
-    const description = novel.synopsis
-      ? novel.synopsis.slice(0, 160).trim() +
-        (novel.synopsis.length > 160 ? "..." : "")
-      : `Read the latest chapters of ${novel.title} on Novel Tavern.`;
+    // Title as per client
+    const title = `${novel.title} novel, read listen ${novel.title} online for free - NovelTavern`;
+
+    // Prepare truncated synopsis
+    const rawSynopsis = novel.synopsis || "No description available";
+    const synopsis =
+      rawSynopsis.length > 160 ? rawSynopsis.slice(0, 157).trim() + "..." : rawSynopsis.trim();
+
+    const authorName = novel.author?.name || "Unknown Author";
+    const yearPublished = novel.publishing_year || "Unknown Year";
+    const novelStatus = novel.status || "unknown status";
+
+    // Description exactly as client wants, with truncated synopsis
+    const description = `Read and listen to ${novel.title} novel full audiobook by ${authorName} released on ${yearPublished} which is still ${novelStatus} and telling a story about ${synopsis}`;
 
     return {
       title,
@@ -137,17 +146,16 @@ export async function generateMetadata({
         novel.title,
         "novel",
         "read online",
-        ...(novel.genres?.map((g: { id: number; name: string }) => g.name) ||
-          []),
-        novel.author?.name || "",
+        ...(novel.genres?.map((g: { id: number; name: string }) => g.name) || []),
+        authorName,
       ]
         .filter(Boolean)
         .join(", "),
-      authors: [{ name: novel.author?.name || "Unknown Author" }],
+      authors: [{ name: authorName }],
       publisher: novel.publisher || "Novel Tavern",
       openGraph: {
-        title: novel.title,
-        description: description,
+        title,
+        description,
         images: novel.cover_image_url
           ? [
               {
@@ -163,8 +171,8 @@ export async function generateMetadata({
       },
       twitter: {
         card: "summary_large_image",
-        title: novel.title,
-        description: description,
+        title,
+        description,
         images: novel.cover_image_url ? [novel.cover_image_url] : [],
         creator: "@noveltavern",
       },
@@ -180,6 +188,7 @@ export async function generateMetadata({
     };
   }
 }
+
 
 export default async function NovelDetailPage({
   params,

@@ -20,10 +20,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Novel Tavern | Audiobooks & Novel Reading Platform",
-  description: "Novel Tavern - Your premier platform for audiobooks and novels",
+  title: "Read Listen free novel Online. Stream Audiobooks and audionovel full NovelTavern",
+  description: "Discover thousands of novels and novel updates to read and listen online for free. Enjoy popular genres including romance, fantasy, cultivation, translated novels & more. Stream audiobooks and eBooks anytime, anywhere for completely free. Start your free literary adventure now!",
   icons: {
-    icon: '/book-icon.svg', 
+    icon: '/book-icon.svg',
   },
   other: {
     'theme-color': '#2563EB',
@@ -38,8 +38,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="dns-prefetch" href="https://development.mitprogrammer.com" />
-        <link rel="preconnect" href="https://development.mitprogrammer.com" />
+        <link rel="dns-prefetch" href="https://api.noveltavern.com" />
+        <link rel="preconnect" href="https://api.noveltavern.com" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

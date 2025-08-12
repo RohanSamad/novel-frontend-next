@@ -91,7 +91,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string; chapterId: string }>;
 }): Promise<Metadata> {
-  const { slug, chapterId } = await params; 
+  const { slug, chapterId } = await params;
   const novelId = slug.replace(/-/g, " ");
 
   const [novelResponse, chapterResponse] = await Promise.all([
@@ -109,23 +109,38 @@ export async function generateMetadata({
     };
   }
 
+  const chapterNumber = selectedChapter.chapter_number;
+  const novelTitle = selectedNovel.title;
+  const chapterTitle = selectedChapter.title || "Untitled Chapter";
+
+  // Clean and truncate chapter content for description
+  const rawContentLines = selectedChapter.content_text
+    ?.split(/\n+/)
+    .map((line: string) => line.trim())
+    .filter((line: string) => line.length > 0) || [];
+
+  const rawContent = rawContentLines.join(" ");
+  const truncatedContent =
+    rawContent.length > 160 ? rawContent.slice(0, 157).trim() + "..." : rawContent;
+
+  // Compose title exactly as client wants
+  const title = `${novelTitle} [Chapter - ${chapterNumber}] : ${chapterTitle}. read listen ${novelTitle} - ${chapterNumber} : ${chapterTitle} novel audiobook full online for free, NovelTavern.`;
+
+  // Compose description exactly as client wants
+  const description = `Read, listen to ${novelTitle} - ${chapterNumber} : ${chapterTitle} novel audio update online for free. ${truncatedContent}`;
+
   return {
-    title: `Chapter ${selectedChapter.chapter_number} | ${selectedNovel.title} | Novel Tavern`,
-    description: `${selectedChapter.content_text
-      ?.split(/\n+/)
-      .filter((line: string) => line.trim() !== "")
-      .slice(0, 2)
-      .join(" ")
-      .slice(0, 160)}`,
+    title,
+    description,
     other: {
       "application/ld+json": JSON.stringify({
         "@context": "https://schema.org",
         "@type": "Chapter",
-        name: `Chapter ${selectedChapter.chapter_number}: ${selectedChapter.title}`,
-        position: selectedChapter.chapter_number,
+        name: `Chapter ${chapterNumber}: ${chapterTitle}`,
+        position: chapterNumber,
         isPartOf: {
           "@type": "Book",
-          name: selectedNovel.title,
+          name: novelTitle,
           author: {
             "@type": "Person",
             name: selectedNovel.author?.name || "Unknown",
@@ -137,12 +152,8 @@ export async function generateMetadata({
           image: selectedNovel.cover_image_url,
         },
         datePublished: selectedChapter.created_at || "N/A",
-        description: selectedChapter.content_text
-          ?.split(/\n+/)
-          .filter((line: string) => line.trim() !== "")
-          .slice(0, 2)
-          .join(" ")
-          .slice(0, 200),
+        description:
+          rawContent.length > 200 ? rawContent.slice(0, 197).trim() + "..." : rawContent,
       }),
     },
   };

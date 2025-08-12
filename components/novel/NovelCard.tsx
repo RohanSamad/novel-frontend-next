@@ -1,9 +1,9 @@
 "use client";
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React from "react";
 import { Novel } from "../../store/slices/novelsSlice";
 import { BookOpen, Clock, AlertCircle, Check} from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 interface NovelCardProps {
   novel: Novel;
@@ -21,8 +21,6 @@ const NovelCard: React.FC<NovelCardProps> = ({
   onSelect,
 }) => {
   const [imageError, setImageError] = React.useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
-  const router = useRouter();
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -49,19 +47,6 @@ const NovelCard: React.FC<NovelCardProps> = ({
         );
       default:
         return null;
-    }
-  };
-
-  const handleNavigation = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsNavigating(true);
-    
-    try {
-      const novelUrl = `/novel/${novel.title.trim().replace(/\s+/g, "-")}`;
-      await router.push(novelUrl);
-    } catch (error) {
-      setIsNavigating(false);
-      console.error("Navigation error:", error);
     }
   };
 
@@ -97,7 +82,6 @@ const NovelCard: React.FC<NovelCardProps> = ({
       flex flex-col
       ${selectable ? "cursor-pointer" : "cursor-pointer"}
       ${selected ? "ring-2 ring-primary-500" : ""}
-      ${isNavigating ? "opacity-75 scale-95" : ""}
       relative
     `}
     >
@@ -165,9 +149,9 @@ const NovelCard: React.FC<NovelCardProps> = ({
   }
 
   return (
-    <div onClick={handleNavigation}>
+    <Link href={`/novel/${novel.title.trim().replace(/\s+/g, "-")}`}>
       <CardContent />
-    </div>
+    </Link>
   );
 };
 
