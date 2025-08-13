@@ -1,6 +1,5 @@
 import axios from "axios";
-
-const API_BASE_URL = "https://api.noveltavern.com";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Create Axios instance
 const api = axios.create({

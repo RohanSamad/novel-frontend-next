@@ -25,8 +25,7 @@ type Chapter = {
   id: string;
   title: string;
   chapter_number: number;
-    audio_url: string; // <-- add this
-
+  audio_url: string; // <-- add this
 };
 const AdminChaptersPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -40,7 +39,7 @@ const AdminChaptersPage: React.FC = () => {
   const [selectedNovelId, setSelectedNovelId] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredChapters, setFilteredChapters] = useState(chapters);
-const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
+  const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -205,9 +204,14 @@ const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
       formData.append("title", newChapterData.title.trim());
       formData.append("content_text", newChapterData.contentText.trim());
       formData.append("audio_file", newChapterData.audioFile);
+      console.log(
+        "Audio file debug:",
+        newChapterData.audioFile,
+        newChapterData.audioFile instanceof File
+      );
 
       const resultAction = await dispatch(addChapter(formData));
-
+      console.log("Result Action: ", resultAction);
       if (addChapter.fulfilled.match(resultAction)) {
         toast.success("New chapter created successfully");
         setIsAddModalOpen(false);
@@ -227,6 +231,7 @@ const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
       if (error instanceof Error) {
         toast.error(error.message);
       } else {
+        console.log("Error is ", error);
         toast.error("Failed to create chapter");
       }
     } finally {

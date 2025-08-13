@@ -141,6 +141,10 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
       .join("\n\n");
   };
 
+  useEffect(() => {
+    console.log("Audio Url is ", selectedChapter);
+  }, []);
+
   return (
     <div
       className={`pt-16 min-h-screen ${
@@ -270,15 +274,17 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
 
           {/* Audio Player */}
           <div className="mb-6">
-            <AudioPlayer
-              audioUrl={selectedChapter.audio_url || "default-audio-url.mp3"}
-              initialPosition={initialPosition}
-              novelId={novelId || ""}
-              chapterId={chapterId || ""}
-              userId={user?.id}
-              autoPlay={preferences.autoPlayEnabled}
-              onEnded={handleChapterEnd}
-            />
+            {selectedChapter?.audio_url && (
+              <AudioPlayer
+                audioUrl={selectedChapter?.audio_url || "default-audio-url.mp3"}
+                initialPosition={initialPosition}
+                novelId={novelId || ""}
+                chapterId={chapterId || ""}
+                userId={user?.id}
+                autoPlay={preferences.autoPlayEnabled}
+                onEnded={handleChapterEnd}
+              />
+            )}
           </div>
 
           {/* Chapter Navigation */}
@@ -287,7 +293,7 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
               chapters={chapters}
               currentChapterId={chapterId || ""}
               // novelId={novelId || ""}
-              novelSlug={slug || ""} 
+              novelSlug={slug || ""}
               onListClick={() => setIsChapterSelectorOpen(true)}
             />
           </div>
@@ -309,7 +315,7 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
               chapters={chapters}
               currentChapterId={chapterId || ""}
               // novelId={slug || ""}
-              novelSlug={slug || ""} 
+              novelSlug={slug || ""}
               onListClick={() => setIsChapterSelectorOpen(true)}
             />
           </div>
