@@ -1,29 +1,24 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
-// ✅ Fix 1: Use production URL or environment variable
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:5173/';
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:5173/";
 
-const slugify = (str: string) => str?.trim().replace(/\s+/g, '-');
+const slugify = (str: string) => str?.trim().replace(/\s+/g, "-");
 
 const getNovels = async () => {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/novels`, {
-      // ✅ Fix 2: Use static revalidation instead of no-store for better performance
-      next: { revalidate: 3600 }, // Revalidate every hour
+      next: { revalidate: 3600 }, // novels can be cached hourly
       headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      }
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
     });
-    
-    if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
-    }
-    
+
+    if (!res.ok) throw new Error(`Novels fetch failed: ${res.status}`);
     const data = await res.json();
     return Array.isArray(data.data) ? data.data : [];
   } catch (error) {
-    console.error('Failed to fetch novels:', error);
+    console.error("❌ Failed to fetch novels:", error);
     return [];
   }
 };
@@ -31,41 +26,44 @@ const getNovels = async () => {
 const getChapters = async (novelId: string) => {
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/chapters/novel/${encodeURIComponent(novelId)}`, 
+      `${process.env.NEXT_PUBLIC_API_URL}/api/chapters/novel/${encodeURIComponent(
+        novelId
+      )}?limit=1000000`, // keep it high if you want "all"
       {
-        // ✅ Fix 3: Use static revalidation
-        next: { revalidate: 3600 },
+        cache: "no-store", // prevent 2MB cache error
         headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        }
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
       }
     );
-    
-    if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
-    }
-    
+
+    if (!res.ok) throw new Error(`Chapters fetch failed: ${res.status}`);
     const data = await res.json();
     return Array.isArray(data.data) ? data.data : [];
   } catch (error) {
-    console.error(`Failed to fetch chapters for novel ${novelId}:`, error);
+    console.error(`❌ Failed to fetch chapters for novel ${novelId}:`, error);
     return [];
   }
 };
 
-// ✅ Fix 4: Add proper export config for static generation
-export const dynamic = 'force-static';
-export const revalidate = 3600; // Revalidate every hour
+export const dynamic = "force-static";
+export const revalidate = 3600; // hourly revalidation
 
 export async function GET() {
   try {
     const staticPaths = [
-      'browse', 'genres', 'contact', 'terms', 'privacy',
-      'search', 'signin', 'signup', 'profile',
+      "browse",
+      "genres",
+      "contact",
+      "terms",
+      "privacy",
+      "search",
+      "signin",
+      "signup",
+      "profile",
     ];
 
-    // ✅ Fix 5: Use proper URL construction
     const urls: Array<{
       loc: string;
       lastmod?: string;
@@ -75,88 +73,78 @@ export async function GET() {
       {
         loc: `${baseUrl}`,
         lastmod: new Date().toISOString(),
-        changefreq: 'daily',
-        priority: '1.0'
+        changefreq: "daily",
+        priority: "1.0",
       },
-      ...staticPaths.map(path => ({
+      ...staticPaths.map((path) => ({
         loc: `${baseUrl}/${path}`,
         lastmod: new Date().toISOString(),
-        changefreq: 'weekly',
-        priority: '0.8'
-      }))
+        changefreq: "weekly",
+        priority: "0.8",
+      })),
     ];
 
     const novels = await getNovels();
-    console.log(`Fetched ${novels.length} novels for sitemap`);
+    console.log(`✅ Fetched ${novels.length} novels for sitemap`);
 
-    // ✅ Fix 6: Add error handling and limits for large datasets
-    const maxNovels = 1000; // Limit to prevent huge sitemaps
-    const limitedNovels = novels.slice(0, maxNovels);
-
-    for (const novel of limitedNovels) {
-      if (!novel?.title) continue; // Skip invalid novels
-      
+    for (const novel of novels) {
+      if (!novel?.title) continue;
       const slug = slugify(novel.title);
-      
-      // Add novel page
+
       urls.push({
         loc: `${baseUrl}/novel/${slug}`,
-        lastmod: novel.updated_at || novel.created_at || new Date().toISOString(),
-        changefreq: 'weekly',
-        priority: '0.9'
+        lastmod:
+          novel.updated_at || novel.created_at || new Date().toISOString(),
+        changefreq: "weekly",
+        priority: "0.9",
       });
 
-      // ✅ Fix 7: Add rate limiting for chapter fetching
       try {
         const chapters = await getChapters(novel.id?.toString() || novel.title);
-        const maxChapters = 100; // Limit chapters per novel
-        const limitedChapters = chapters.slice(0, maxChapters);
-        
-        for (const chapter of limitedChapters) {
-          if (!chapter?.chapter_number) continue; // Skip invalid chapters
-          
+        for (const chapter of chapters) {
+          if (!chapter?.chapter_number) continue;
+
           urls.push({
             loc: `${baseUrl}/novel/${slug}/chapter/${chapter.chapter_number}`,
-            lastmod: chapter.updated_at || chapter.created_at || new Date().toISOString(),
-            changefreq: 'monthly',
-            priority: '0.7'
+            lastmod:
+              chapter.updated_at ||
+              chapter.created_at ||
+              new Date().toISOString(),
+            changefreq: "monthly",
+            priority: "0.7",
           });
         }
-      } catch (chapterError) {
-        console.error(`Failed to fetch chapters for novel ${novel.title}:`, chapterError);
-        // Continue with other novels even if one fails
+      } catch (err) {
+        console.error(`❌ Skipped chapters for ${novel.title}:`, err);
       }
     }
 
-    // ✅ Fix 8: Proper XML sitemap format
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" 
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-${urls.map(url => `  <url>
-    <loc>${url.loc}</loc>
-    ${url.lastmod ? `<lastmod>${url.lastmod}</lastmod>` : ''}
-    ${url.changefreq ? `<changefreq>${url.changefreq}</changefreq>` : ''}
-    ${url.priority ? `<priority>${url.priority}</priority>` : ''}
-  </url>`).join('\n')}
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls
+  .map(
+    (url) => `<url>
+  <loc>${url.loc}</loc>
+  ${url.lastmod ? `<lastmod>${url.lastmod}</lastmod>` : ""}
+  ${url.changefreq ? `<changefreq>${url.changefreq}</changefreq>` : ""}
+  ${url.priority ? `<priority>${url.priority}</priority>` : ""}
+</url>`
+  )
+  .join("\n")}
 </urlset>`;
 
-    console.log(`Generated sitemap with ${urls.length} URLs`);
+    console.log(`✅ Generated sitemap with ${urls.length} URLs`);
 
     return new NextResponse(sitemap, {
       headers: {
-        'Content-Type': 'application/xml',
-        // ✅ Fix 9: Add caching headers
-        'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+        "Content-Type": "application/xml",
+        "Cache-Control": "public, max-age=3600, s-maxage=3600",
       },
     });
-    
   } catch (error) {
-    console.error('Error generating sitemap:', error);
-    
-    // ✅ Fix 10: Return basic sitemap on error
-    const basicSitemap = `<?xml version="1.0" encoding="UTF-8"?>
+    console.error("❌ Error generating sitemap:", error);
+
+    const fallback = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>${baseUrl}</loc>
@@ -166,10 +154,8 @@ ${urls.map(url => `  <url>
   </url>
 </urlset>`;
 
-    return new NextResponse(basicSitemap, {
-      headers: {
-        'Content-Type': 'application/xml',
-      },
+    return new NextResponse(fallback, {
+      headers: { "Content-Type": "application/xml" },
     });
   }
 }
