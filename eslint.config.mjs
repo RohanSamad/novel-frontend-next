@@ -13,9 +13,10 @@ const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
 
   {
-    // Disable specific rule here
     rules: {
       "react-hooks/exhaustive-deps": "off",
+      "quotes": "off", // disables single/double quotes enforcement
+      "@typescript-eslint/no-explicit-any": "off", // allows "any" type
     },
   },
 ];

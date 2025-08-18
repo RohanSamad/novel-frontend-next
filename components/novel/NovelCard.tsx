@@ -140,6 +140,8 @@ const NovelCard: React.FC<NovelCardProps> = ({
     </div>
   );
 
+  console.log("The Selectable is ",selectable)
+
   if (selectable) {
     return (
       <div onClick={() => onSelect?.(novel)}>

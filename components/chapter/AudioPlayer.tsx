@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
 import { useAppDispatch } from '../../hooks/redux';
 import { updateLocalProgress } from '../../store/slices/progressSlice';
-import { Howl } from 'howler';
+import { Howl, Howler } from 'howler';
 
 interface AudioPlayerProps {
   audioUrl: string;
@@ -21,7 +21,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   novelId,
   chapterId,
   userId,
-  autoPlay = false,
   onEnded,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -30,55 +29,38 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const [volume, setVolume] = useState(0.7);
   const [isMuted, setIsMuted] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   
   const soundRef = useRef<Howl | null>(null);
   const progressInterval = useRef<number | null>(null);
-  const autoPlayTimeout = useRef<number | null>(null);
   const saveProgressInterval = useRef<number | null>(null);
-  const isInitialized = useRef(false);
   const isMounted = useRef(true);
-  const initTimeoutRef = useRef<number | null>(null);
-  const lastAudioUrl = useRef<string>('');
+  const lastInitializedUrl = useRef<string>('');
+  const isInitializing = useRef(false);
+  
   const dispatch = useAppDispatch();
 
-  // Comprehensive cleanup function
+  // Simple cleanup function
   const cleanup = useCallback(() => {
-    console.log('Cleaning up audio player');
+    console.log('Cleaning up audio...');
     
-    // Clear all timeouts and intervals
     if (progressInterval.current) {
       clearInterval(progressInterval.current);
       progressInterval.current = null;
     }
-    if (autoPlayTimeout.current) {
-      clearTimeout(autoPlayTimeout.current);
-      autoPlayTimeout.current = null;
-    }
-    if (saveProgressInterval.current) {
-      clearInterval(saveProgressInterval.current);
-      saveProgressInterval.current = null;
-    }
-    if (initTimeoutRef.current) {
-      clearTimeout(initTimeoutRef.current);
-      initTimeoutRef.current = null;
-    }
     
-    // Properly cleanup Howl instance
     if (soundRef.current) {
       try {
         soundRef.current.stop();
         soundRef.current.unload();
       } catch (e) {
-        console.warn('Error during Howl cleanup:', e);
+        console.warn('Cleanup error:', e);
       }
       soundRef.current = null;
     }
-    
-    isInitialized.current = false;
   }, []);
 
-  // Save progress function
+  // Save progress
   const saveProgress = useCallback(() => {
     if (userId && currentTime > 0 && isMounted.current) {
       dispatch(
@@ -95,187 +77,167 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   }, [userId, novelId, chapterId, currentTime, dispatch]);
 
   // Progress tracking
-  const startProgressInterval = useCallback(() => {
-    if (progressInterval.current) {
-      clearInterval(progressInterval.current);
-    }
+  const startProgressTracking = useCallback(() => {
+    if (progressInterval.current) return; // Don't start if already running
+    
     progressInterval.current = window.setInterval(() => {
       if (soundRef.current && soundRef.current.playing() && isMounted.current) {
         const seekTime = soundRef.current.seek() as number;
-        if (isFinite(seekTime)) {
+        if (isFinite(seekTime) && seekTime >= 0) {
           setCurrentTime(seekTime);
         }
       }
     }, 100);
   }, []);
 
-  const clearProgressInterval = useCallback(() => {
+  const stopProgressTracking = useCallback(() => {
     if (progressInterval.current) {
       clearInterval(progressInterval.current);
       progressInterval.current = null;
     }
   }, []);
 
-  // Reset component state
-  const resetState = useCallback(() => {
-    setIsPlaying(false);
-    setCurrentTime(initialPosition);
-    setDuration(0);
-    setError(null);
-    setIsLoading(true);
-  }, [initialPosition]);
-
-  // Debounced audio initialization
+  // Initialize audio - MUCH SIMPLER VERSION
   const initializeAudio = useCallback(() => {
-    // Prevent initialization if already in progress or if URL hasn't changed
-    if (isInitialized.current || !audioUrl || audioUrl === lastAudioUrl.current) {
+    // Prevent multiple initializations
+    if (!audioUrl || 
+        isInitializing.current || 
+        lastInitializedUrl.current === audioUrl ||
+        !isMounted.current) {
+      console.log('Skipping init:', {
+        hasUrl: !!audioUrl,
+        isInitializing: isInitializing.current,
+        sameUrl: lastInitializedUrl.current === audioUrl,
+        isMounted: isMounted.current
+      });
       return;
     }
 
-    console.log('Initializing audio for URL:', audioUrl);
-    isInitialized.current = true;
-    lastAudioUrl.current = audioUrl;
-
-    // Reset state
-    resetState();
+    console.log('Initializing audio for:', audioUrl);
     
-    // Cleanup any existing instance
+    // Mark as initializing to prevent multiple calls
+    isInitializing.current = true;
+    lastInitializedUrl.current = audioUrl;
+    
+    // Reset state
+    setIsLoading(true);
+    setError(null);
+    setIsPlaying(false);
+    
+    // Cleanup any existing sound
     cleanup();
 
-    // Debounce initialization to prevent rapid re-initialization
-    initTimeoutRef.current = window.setTimeout(() => {
-      try {
-        if (!isMounted.current || !audioUrl) {
-          isInitialized.current = false;
-          return;
-        }
-
-        const sound = new Howl({
-          src: [audioUrl],
-          html5: true,
-          preload: true,
-          volume: isMuted ? 0 : volume,
-          
-          onload: () => {
-            console.log('Audio loaded successfully');
-            if (!isMounted.current) return;
-            
-            const audioDuration = sound.duration();
-            setDuration(audioDuration);
-            setIsLoading(false);
-            
-            // Set initial position
-            if (initialPosition > 0 && initialPosition < audioDuration) {
-              sound.seek(initialPosition);
-              setCurrentTime(initialPosition);
-            }
-
-            // Handle auto-play
-            if (autoPlay) {
-              autoPlayTimeout.current = window.setTimeout(() => {
-                try {
-                  if (sound && !sound.playing() && isMounted.current) {
-                    sound.play();
-                  }
-                } catch (autoPlayError) {
-                  console.warn('Auto-play failed (expected in many browsers):', autoPlayError);
-                }
-              }, 1000);
-            }
-          },
-          
-          onplay: () => {
-            console.log('Audio started playing');
-            if (!isMounted.current) return;
-            setIsPlaying(true);
-            setIsLoading(false);
-            setError(null);
-            startProgressInterval();
-          },
-          
-          onpause: () => {
-            console.log('Audio paused');
-            if (!isMounted.current) return;
-            setIsPlaying(false);
-            setIsLoading(false);
-            clearProgressInterval();
-          },
-          
-          onstop: () => {
-            console.log('Audio stopped');
-            if (!isMounted.current) return;
-            setIsPlaying(false);
-            setIsLoading(false);
-            clearProgressInterval();
-          },
-          
-          onend: () => {
-            console.log('Audio ended');
-            if (!isMounted.current) return;
-            setIsPlaying(false);
-            setIsLoading(false);
-            clearProgressInterval();
-            if (onEnded) onEnded();
-          },
-          
-          onseek: () => {
-            if (!isMounted.current) return;
-            const seekTime = sound.seek() as number;
-            if (isFinite(seekTime)) {
-              setCurrentTime(seekTime);
-            }
-          },
-          
-          onloaderror: (id: number, error: unknown) => {
-            console.error('Audio load error:', error);
-            if (!isMounted.current) return;
-            setError('Failed to load audio file');
-            setIsLoading(false);
-            isInitialized.current = false;
-          },
-          
-          onplayerror: (id: number, error: unknown) => {
-            console.error('Audio play error:', error);
-            if (!isMounted.current) return;
-            setError('Failed to play audio file');
-            setIsPlaying(false);
-            setIsLoading(false);
-            isInitialized.current = false;
-          },
-        });
-
-        if (isMounted.current) {
-          soundRef.current = sound;
-        } else {
-          // Component unmounted during initialization
-          sound.unload();
-        }
+    try {
+      const sound = new Howl({
+        src: [audioUrl],
+        html5: true,
+        preload: true,
+        volume: isMuted ? 0 : volume,
         
-      } catch (err) {
-        console.error('Error initializing audio:', err);
-        if (isMounted.current) {
-          setError('Failed to initialize audio player');
+        onload: () => {
+          console.log('Audio loaded');
+          if (!isMounted.current) {
+            sound.unload();
+            return;
+          }
+          
+          const audioDuration = sound.duration();
+          setDuration(audioDuration);
           setIsLoading(false);
-        }
-        isInitialized.current = false;
+          isInitializing.current = false; // Mark initialization complete
+          
+          // Set initial position
+          if (initialPosition > 0 && initialPosition < audioDuration) {
+            sound.seek(initialPosition);
+            setCurrentTime(initialPosition);
+          }
+        },
+        
+        onplay: () => {
+          if (!isMounted.current) return;
+          setIsPlaying(true);
+          startProgressTracking();
+        },
+        
+        onpause: () => {
+          if (!isMounted.current) return;
+          setIsPlaying(false);
+          stopProgressTracking();
+        },
+        
+        onstop: () => {
+          if (!isMounted.current) return;
+          setIsPlaying(false);
+          stopProgressTracking();
+        },
+        
+        onend: () => {
+          if (!isMounted.current) return;
+          setIsPlaying(false);
+          stopProgressTracking();
+          if (onEnded) onEnded();
+        },
+        
+        onseek: () => {
+          if (!isMounted.current) return;
+          const seekTime = sound.seek() as number;
+          if (isFinite(seekTime)) {
+            setCurrentTime(seekTime);
+          }
+        },
+        
+        onloaderror: (id: number, error: unknown) => {
+          console.error('Load error:', error);
+          if (!isMounted.current) return;
+          setError('Failed to load audio');
+          setIsLoading(false);
+          isInitializing.current = false;
+        },
+        
+        onplayerror: (id: number, error: unknown) => {
+          console.error('Play error:', error);
+          if (!isMounted.current) return;
+          setError('Failed to play audio');
+          setIsPlaying(false);
+          isInitializing.current = false;
+        },
+      });
+
+      if (isMounted.current) {
+        soundRef.current = sound;
+      } else {
+        sound.unload();
+        isInitializing.current = false;
       }
-    }, 100); // Small delay to prevent rapid re-initialization
-  }, [audioUrl, initialPosition, volume, isMuted, autoPlay, onEnded, resetState, cleanup, startProgressInterval, clearProgressInterval]);
-
-  // Initialize audio when dependencies change
-  useEffect(() => {
-    // Only initialize if audioUrl actually changed
-    if (audioUrl && audioUrl !== lastAudioUrl.current) {
-      initializeAudio();
+      
+    } catch (err) {
+      console.error('Init error:', err);
+      setError('Audio initialization failed');
+      setIsLoading(false);
+      isInitializing.current = false;
     }
-  }, [initializeAudio, audioUrl]);
+  }, []); // NO DEPENDENCIES to prevent infinite loops!
 
-  // Setup progress saving interval
+  // Initialize only when audioUrl changes - SIMPLE EFFECT
+  useEffect(() => {
+    // Reset state when URL changes
+    lastInitializedUrl.current = '';
+    isInitializing.current = false;
+    
+    if (audioUrl) {
+      // Small delay to ensure state is reset
+      const timer = setTimeout(() => {
+        initializeAudio();
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [audioUrl]); // ONLY audioUrl dependency
+
+  // Progress saving interval
   useEffect(() => {
     if (userId) {
-      saveProgressInterval.current = window.setInterval(() => {
-        saveProgress();
-      }, 5000);
+      saveProgressInterval.current = window.setInterval(saveProgress, 5000);
     }
 
     return () => {
@@ -283,136 +245,131 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         clearInterval(saveProgressInterval.current);
         saveProgressInterval.current = null;
       }
-      if (userId) {
-        saveProgress();
-      }
     };
   }, [userId, saveProgress]);
 
-  // Cleanup on unmount
+  // Mount/unmount
   useEffect(() => {
     isMounted.current = true;
+    
     return () => {
       isMounted.current = false;
+      isInitializing.current = false;
       cleanup();
+      // Global cleanup
+      try {
+        Howler.unload();
+      } catch (e) {
+        console.warn('Global cleanup error:', e);
+      }
     };
   }, [cleanup]);
 
-  // Player controls with better error handling
-  const togglePlay = useCallback(() => {
-    if (!soundRef.current || isLoading || error || !isMounted.current) {
-      console.log('Cannot toggle play:', { hasSound: !!soundRef.current, isLoading, error, isMounted: isMounted.current });
-      return;
-    }
-
+  // Control functions - SIMPLE VERSIONS
+  const togglePlay = () => {
+    if (!soundRef.current || isLoading || error) return;
+    
     try {
       if (isPlaying) {
         soundRef.current.pause();
       } else {
         soundRef.current.play();
       }
-    } catch (playError) {
-      console.error('Error toggling play:', playError);
-      setError('Failed to control audio playback');
-      setIsLoading(false);
+    } catch (err) {
+      console.error('Play/pause error:', err);
+      setError('Playback control failed');
     }
-  }, [isLoading, error, isPlaying]);
+  };
 
-  const handleSeek = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!soundRef.current || isLoading || error || !isMounted.current) return;
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!soundRef.current || isLoading || error) return;
     
-    try {
-      const newTime = parseFloat(e.target.value);
-      if (newTime >= 0 && newTime <= duration && isFinite(newTime)) {
-        soundRef.current.seek(newTime);
-        setCurrentTime(newTime);
-      }
-    } catch (seekError) {
-      console.error('Error seeking:', seekError);
-    }
-  }, [isLoading, error, duration]);
-
-  const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!soundRef.current || isLoading || error || !isMounted.current) return;
-    
-    try {
-      const newVolume = parseFloat(e.target.value);
-      setVolume(newVolume);
-      soundRef.current.volume(isMuted ? 0 : newVolume);
-      
-      if (newVolume === 0 && !isMuted) {
-        setIsMuted(true);
-      } else if (newVolume > 0 && isMuted) {
-        setIsMuted(false);
-      }
-    } catch (volumeError) {
-      console.error('Error changing volume:', volumeError);
-    }
-  }, [isLoading, error, isMuted]);
-
-  const toggleMute = useCallback(() => {
-    if (!soundRef.current || isLoading || error || !isMounted.current) return;
-    
-    try {
-      const newMuteState = !isMuted;
-      setIsMuted(newMuteState);
-      soundRef.current.volume(newMuteState ? 0 : volume);
-    } catch (muteError) {
-      console.error('Error toggling mute:', muteError);
-    }
-  }, [isLoading, error, isMuted, volume]);
-
-  const skipBackward = useCallback(() => {
-    if (!soundRef.current || isLoading || error || !isMounted.current) return;
-    
-    try {
-      const newTime = Math.max(0, currentTime - 10);
+    const newTime = parseFloat(e.target.value);
+    if (newTime >= 0 && newTime <= duration) {
       soundRef.current.seek(newTime);
       setCurrentTime(newTime);
-    } catch (skipError) {
-      console.error('Error skipping backward:', skipError);
     }
-  }, [isLoading, error, currentTime]);
+  };
 
-  const skipForward = useCallback(() => {
-    if (!soundRef.current || isLoading || error || !isMounted.current) return;
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!soundRef.current) return;
     
-    try {
-      const newTime = Math.min(duration, currentTime + 10);
-      soundRef.current.seek(newTime);
-      setCurrentTime(newTime);
-    } catch (skipError) {
-      console.error('Error skipping forward:', skipError);
+    const newVolume = parseFloat(e.target.value);
+    setVolume(newVolume);
+    soundRef.current.volume(isMuted ? 0 : newVolume);
+    
+    if (newVolume === 0) {
+      setIsMuted(true);
+    } else if (isMuted) {
+      setIsMuted(false);
     }
-  }, [isLoading, error, currentTime, duration]);
+  };
 
-  const formatTime = useCallback((time: number) => {
-    if (!isFinite(time) || isNaN(time)) return '0:00';
+  const toggleMute = () => {
+    if (!soundRef.current) return;
+    
+    const newMuteState = !isMuted;
+    setIsMuted(newMuteState);
+    soundRef.current.volume(newMuteState ? 0 : volume);
+  };
+
+  const skipBackward = () => {
+    if (!soundRef.current || isLoading || error) return;
+    
+    const newTime = Math.max(0, currentTime - 10);
+    soundRef.current.seek(newTime);
+    setCurrentTime(newTime);
+  };
+
+  const skipForward = () => {
+    if (!soundRef.current || isLoading || error) return;
+    
+    const newTime = Math.min(duration, currentTime + 10);
+    soundRef.current.seek(newTime);
+    setCurrentTime(newTime);
+  };
+
+  const formatTime = (time: number) => {
+    if (!isFinite(time)) return '0:00';
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-  }, []);
+  };
+
+  const retry = () => {
+    setError(null);
+    lastInitializedUrl.current = '';
+    isInitializing.current = false;
+    cleanup();
+    
+    setTimeout(() => {
+      initializeAudio();
+    }, 500);
+  };
+
+  // Don't render if no audio URL
+  if (!audioUrl) {
+    return (
+      <div className="rounded-lg shadow-md p-4">
+        <div className="p-3 bg-gray-50 text-gray-700 rounded-md text-sm">
+          No audio available for this chapter
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-lg shadow-md p-4">
       {error && (
         <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
           {error}
-          <button 
-            onClick={() => {
-              setError(null);
-              isInitialized.current = false;
-              lastAudioUrl.current = '';
-              initializeAudio();
-            }}
-            className="ml-2 underline"
-          >
+          <button onClick={retry} className="ml-2 underline">
             Retry
           </button>
         </div>
       )}
 
-      {isLoading && !error && (
+      {isLoading && (
         <div className="mb-4 p-3 bg-blue-50 text-blue-700 rounded-md text-sm flex items-center">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700 mr-2"></div>
           Loading audio...
@@ -423,16 +380,16 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         <div className="mb-4">
           <div className="relative w-full h-2 bg-gray-200 rounded-full">
             <div
-              className="absolute h-full bg-primary-600 rounded-full transition-all duration-100"
+              className="absolute h-full bg-primary-600 rounded-full"
               style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
-            ></div>
+            />
             <input
               type="range"
               min="0"
               max={duration || 100}
               value={currentTime}
               onChange={handleSeek}
-              className="absolute w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+              className="absolute w-full h-full opacity-0 cursor-pointer"
               disabled={isLoading || !!error}
             />
           </div>
@@ -446,37 +403,34 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           <div className="flex items-center space-x-4">
             <button
               onClick={skipBackward}
-              className="text-gray-700 hover:text-primary-600 transition-colors disabled:text-gray-400 disabled:cursor-not-allowed"
-              aria-label="Skip backward 10 seconds"
               disabled={isLoading || !!error}
+              className="text-gray-700 hover:text-primary-600 disabled:text-gray-400"
             >
               <SkipBack size={20} />
             </button>
 
             <button
               onClick={togglePlay}
+              disabled={isLoading || !!error}
               className={`${
                 isLoading || error
-                  ? 'bg-gray-400 cursor-not-allowed'
+                  ? 'bg-gray-400'
                   : 'bg-primary-600 hover:bg-primary-700'
-              } text-white rounded-full p-3 transition-colors flex items-center justify-center relative`}
-              aria-label={isPlaying ? 'Pause' : 'Play'}
-              disabled={isLoading || !!error}
+              } text-white rounded-full p-3 transition-colors`}
             >
               {isLoading ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
               ) : isPlaying ? (
-                <Pause size={20} className="text-white" />
+                <Pause size={20} />
               ) : (
-                <Play size={20} className="ml-0.5 text-white" />
+                <Play size={20} className="ml-0.5" />
               )}
             </button>
 
             <button
               onClick={skipForward}
-              className="text-gray-700 hover:text-primary-600 transition-colors disabled:text-gray-400 disabled:cursor-not-allowed"
-              aria-label="Skip forward 10 seconds"
               disabled={isLoading || !!error}
+              className="text-gray-700 hover:text-primary-600 disabled:text-gray-400"
             >
               <SkipForward size={20} />
             </button>
@@ -485,9 +439,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           <div className="flex items-center space-x-2">
             <button
               onClick={toggleMute}
-              className="text-gray-700 hover:text-primary-600 transition-colors disabled:text-gray-400 disabled:cursor-not-allowed"
-              aria-label={isMuted ? 'Unmute' : 'Mute'}
               disabled={isLoading || !!error}
+              className="text-gray-700 hover:text-primary-600 disabled:text-gray-400"
             >
               {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
             </button>
@@ -499,8 +452,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
               step="0.01"
               value={volume}
               onChange={handleVolumeChange}
-              className="w-20 accent-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
-              aria-label="Volume"
+              className="w-20 accent-primary-600"
               disabled={isLoading || !!error}
             />
           </div>

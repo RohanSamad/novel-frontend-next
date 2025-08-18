@@ -79,7 +79,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 async function getChaptersData(novelId: string, page: number = 1): Promise<ChaptersApiResponse> {
   try {
     const response = await fetch(
-      `${API_BASE}/api/chapters/novel/${encodeURIComponent(novelId)}?page=${page}`,
+      `${API_BASE}/api/chapters/novel/${encodeURIComponent(novelId)}?page=${page}&short_query=true`,
       {
         headers: {
           Accept: "application/json",
@@ -379,6 +379,7 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
 
   // Initialize hasMoreChapters based on initial data
   useEffect(() => {
+    console.log("Initial chapters length:", initialChapters);
     if (initialChapters.length >= totalChapters) {
       setHasMoreChapters(false);
     }
@@ -561,7 +562,7 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
             </div>
           ) : (
             <div className="divide-y max-h-96 overflow-y-auto">
-              {chapters.map((chapter, index) => (
+              {chapters?.map((chapter, index) => (
                 <div
                   key={chapter.id}
                   ref={

@@ -26,9 +26,9 @@ const getNovels = async () => {
 const getChapters = async (novelId: string) => {
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/chapters/novel/${encodeURIComponent(
-        novelId
-      )}?limit=1000000`, // keep it high if you want "all"
+      `${
+        process.env.NEXT_PUBLIC_API_URL
+      }/api/chapters/novel/${encodeURIComponent(novelId)}?limit=1000000`, // keep it high if you want "all"
       {
         cache: "no-store", // prevent 2MB cache error
         headers: {

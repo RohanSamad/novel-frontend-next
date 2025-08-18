@@ -51,7 +51,6 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
   const { userProgress } = useAppSelector((state) => state.progress);
   const { user } = useAppSelector((state) => state.auth);
 
-  // Same loadPreferences logic as your original code
   const loadPreferences = (): ChapterPreferences => {
     if (typeof window !== "undefined") {
       const savedPrefs = localStorage.getItem("chapterPreferences");
@@ -69,19 +68,16 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
   );
   const [isChapterSelectorOpen, setIsChapterSelectorOpen] = useState(false);
 
-  // Same useEffect for saving preferences
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("chapterPreferences", JSON.stringify(preferences));
     }
   }, [preferences]);
 
-  // Same progress logic as your original code
   const progressKey = novelId && chapterId ? `${novelId}-${chapterId}` : "";
   const savedProgress = userProgress[progressKey];
   const initialPosition = savedProgress?.audio_position || 0;
 
-  // Same toggle functions as your original code
   const toggleTheme = () => {
     setPreferences((prev) => ({
       ...prev,
@@ -121,7 +117,6 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
     }
   };
 
-  // Same formatChapterContent logic as your original code
   const formatChapterContent = (content: string) => {
     const paragraphs = content
       .split(/(?:<\/p>|<br\s*\/?\>|\n)/)
@@ -141,9 +136,28 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
       .join("\n\n");
   };
 
+  // Validate audio URL
+  const isValidAudioUrl = (url: string | null | undefined): boolean => {
+    if (!url || typeof url !== 'string') return false;
+    try {
+      new URL(url);
+      return url.includes('.mp3') || url.includes('.wav') || url.includes('.ogg') || url.includes('.m4a');
+    } catch {
+      return false;
+    }
+  };
+
+  // Get clean audio URL
+  const audioUrl = selectedChapter?.audio_url;
+  const hasValidAudio = isValidAudioUrl(audioUrl);
+
   useEffect(() => {
-    console.log("Audio Url is ", selectedChapter);
-  }, []);
+    console.log('Chapter data:', {
+      chapterNumber: selectedChapter?.chapter_number,
+      audioUrl: audioUrl,
+      hasValidAudio: hasValidAudio
+    });
+  }, [selectedChapter, audioUrl, hasValidAudio]);
 
   return (
     <div
@@ -261,38 +275,41 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
       {/* Chapter Content */}
       <div className="container mx-auto px-4 py-6">
         <div className="max-w-3xl mx-auto">
-          {/* Audio not playing note */}
-          <div className="mb-4 p-4 bg-warning-50 text-warning-800 rounded-lg">
-            <p className="text-sm">
-              NOTE: Audio not playing? Try to sign out and retry! If still not
-              working, remain signed out and retry! Autoplay feature on the top
-              bar only works for Chrome browsers on desktops and Android
-              devices. If autoplay failed to play the audio, turn it off,
-              refresh the page and turn it on again.
-            </p>
-          </div>
-
-          {/* Audio Player */}
+          {/* Audio Player Section */}
           <div className="mb-6">
-            {selectedChapter?.audio_url && (
+            {hasValidAudio ? (
               <AudioPlayer
-                audioUrl={selectedChapter?.audio_url || "default-audio-url.mp3"}
+                audioUrl={audioUrl}
                 initialPosition={initialPosition}
-                novelId={novelId || ""}
-                chapterId={chapterId || ""}
+                novelId={novelId}
+                chapterId={chapterId}
                 userId={user?.id}
                 autoPlay={preferences.autoPlayEnabled}
                 onEnded={handleChapterEnd}
               />
+            ) : (
+              <div className="p-4 bg-gray-50 text-gray-700 rounded-lg text-center">
+                <p className="text-sm">Audio not available for this chapter</p>
+              </div>
             )}
           </div>
+
+          {/* Audio troubleshooting note - only show if audio should be available */}
+          {hasValidAudio && (
+            <div className="mb-4 p-4 bg-warning-50 text-warning-800 rounded-lg">
+              <p className="text-sm">
+                <strong>Audio Troubleshooting:</strong> If audio isn&apos;t playing, try refreshing the page. 
+                AutoPlay only works on Chrome browsers (desktop and Android). 
+                If AutoPlay fails, turn it off, refresh, then turn it back on.
+              </p>
+            </div>
+          )}
 
           {/* Chapter Navigation */}
           <div className="mb-6">
             <ChapterNavigation
               chapters={chapters}
               currentChapterId={chapterId || ""}
-              // novelId={novelId || ""}
               novelSlug={slug || ""}
               onListClick={() => setIsChapterSelectorOpen(true)}
             />
@@ -314,7 +331,6 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
             <ChapterNavigation
               chapters={chapters}
               currentChapterId={chapterId || ""}
-              // novelId={slug || ""}
               novelSlug={slug || ""}
               onListClick={() => setIsChapterSelectorOpen(true)}
             />
