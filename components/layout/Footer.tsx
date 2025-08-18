@@ -18,7 +18,6 @@ const Footer = () => {
             <p className="text-gray-300 text-sm mt-2">
               Your premier platform for audiobooks and novels.
             </p>
-            <p className="text-gray-300 text-sm mt-2">explore, read, and listen more novel audiobooks at our <Link className='text-blue-300' href="/">Homepage</Link></p>
             
           </div>
 

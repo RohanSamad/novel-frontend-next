@@ -608,6 +608,8 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
           )}
         </div>
       </div>
+      
+            <p className="text-md mt-2 mx-auto w-fit my-5 text-gray-500">explore, read, and listen more novel audiobooks at our <Link className='text-blue-600' href="/">Homepage</Link></p>
 
       {isRatingModalOpen && (
         <RatingModal
