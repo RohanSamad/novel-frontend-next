@@ -7,6 +7,7 @@ import { createNovel } from "../../../store/slices/novelsSlice";
 import Button from "../../ui/Button";
 import { toast } from "react-hot-toast";
 import LoadingSpinner from "../../ui/LoadingSpinner";
+import Image from "next/image";
 
 interface Genre {
   id: string;
@@ -375,7 +376,7 @@ const AddNovelPage: React.FC = () => {
                 <div className="flex items-center space-x-4">
                   <div className="relative w-32 h-44 bg-gray-100 rounded-lg overflow-hidden">
                     {formData.coverImage ? (
-                      <img
+                      <Image
                         src={URL.createObjectURL(formData.coverImage)}
                         alt="Cover preview"
                         className="object-cover w-full h-full"

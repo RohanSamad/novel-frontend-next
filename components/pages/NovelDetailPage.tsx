@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback, useMemo, memo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/hooks/redux";
-import { Star, ChevronRight, Calendar, BookOpen, Loader2, TrendingUp } from "lucide-react";
+import { Star, ChevronRight, Calendar, BookOpen, Loader2 } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import Button from "@/components/ui/Button";

@@ -136,25 +136,25 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const attemptAutoPlay = useCallback(() => {
     if (!soundRef.current || !currentAutoPlayState.current || autoPlayExecuted.current) return;
 
-    try {
-      const playResult = soundRef.current.play();
-      
-      // Handle both promise and non-promise returns from Howler
-      if (playResult && typeof playResult.then === 'function') {
-        playResult.then(() => {
-          console.log('Autoplay started successfully');
-          autoPlayExecuted.current = true;
-        }).catch((error) => {
-          console.log('Autoplay prevented by browser:', error);
-        });
-      } else {
-        // For older versions of Howler or when no promise is returned
-        autoPlayExecuted.current = true;
-        console.log('Autoplay attempted (no promise returned)');
-      }
-    } catch (err) {
-      console.log('Autoplay attempt failed:', err);
-    }
+  try {
+    const playResult = soundRef.current.play() as number | Promise<any>;
+  
+  // Handle both promise and non-promise returns from Howler
+  if (playResult && typeof (playResult as any).then === 'function') {
+    (playResult as Promise<any>).then(() => {
+      console.log('Autoplay started successfully');
+      autoPlayExecuted.current = true;
+    }).catch((error) => {
+      console.log('Autoplay prevented by browser:', error);
+    });
+  } else {
+    // For older versions of Howler or when no promise is returned
+    autoPlayExecuted.current = true;
+    console.log('Autoplay attempted (no promise returned)');
+  }
+} catch (err) {
+  console.log('Autoplay attempt failed:', err);
+}
   }, []);
 
   // Initialize audio - REMOVED ALL autoPlay dependencies
