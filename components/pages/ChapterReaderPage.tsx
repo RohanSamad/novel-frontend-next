@@ -1,6 +1,7 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/hooks/redux";
 import AudioPlayer from "@/components/chapter/AudioPlayer";
 import ChapterNavigation from "@/components/chapter/ChapterNavigation";
@@ -50,11 +51,18 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
 }) => {
   const { userProgress } = useAppSelector((state) => state.progress);
   const { user } = useAppSelector((state) => state.auth);
+  const router = useRouter();
 
   const loadPreferences = (): ChapterPreferences => {
     if (typeof window !== "undefined") {
       const savedPrefs = localStorage.getItem("chapterPreferences");
-      if (savedPrefs) return JSON.parse(savedPrefs);
+      if (savedPrefs) {
+        try {
+          return JSON.parse(savedPrefs);
+        } catch (error) {
+          console.error("Error parsing preferences:", error);
+        }
+      }
     }
     return {
       theme: "light",
@@ -67,16 +75,63 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
     loadPreferences()
   );
   const [isChapterSelectorOpen, setIsChapterSelectorOpen] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
 
+  // Save preferences to localStorage whenever they change
   useEffect(() => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("chapterPreferences", JSON.stringify(preferences));
+      try {
+        localStorage.setItem("chapterPreferences", JSON.stringify(preferences));
+      } catch (error) {
+        console.error("Error saving preferences:", error);
+      }
     }
   }, [preferences]);
 
+  // Get progress data
   const progressKey = novelId && chapterId ? `${novelId}-${chapterId}` : "";
   const savedProgress = userProgress[progressKey];
   const initialPosition = savedProgress?.audio_position || 0;
+
+  // Find next chapter for autoplay navigation
+  const findNextChapter = useCallback(() => {
+    const currentIndex = chapters.findIndex(
+      (chapter) => chapter.chapter_number.toString() === chapterId
+    );
+    
+    if (currentIndex >= 0 && currentIndex < chapters.length - 1) {
+      return chapters[currentIndex + 1];
+    }
+    return null;
+  }, [chapters, chapterId]);
+
+  // Handle chapter end - navigate to next chapter if autoplay is enabled
+  const handleChapterEnd = useCallback(() => {
+    if (!preferences.autoPlayEnabled) {
+      return;
+    }
+
+    const nextChapter = findNextChapter();
+    if (!nextChapter) {
+      return;
+    }
+
+    setIsNavigating(true);
+
+    // Use Next.js router for better performance, fallback to window.location
+    try {
+      const nextUrl = `/novel/${slug}/chapter/${nextChapter.chapter_number}`;
+      router.push(nextUrl);
+    } catch (error) {
+      console.error("Router navigation failed, using window.location:", error);
+      window.location.href = `/novel/${slug}/chapter/${nextChapter.chapter_number}`;
+    }
+  }, [preferences.autoPlayEnabled, findNextChapter, slug, router]);
+
+  // Reset navigation state when chapter changes
+  useEffect(() => {
+    setIsNavigating(false);
+  }, [chapterId]);
 
   const toggleTheme = () => {
     setPreferences((prev) => ({
@@ -104,17 +159,6 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
       ...prev,
       autoPlayEnabled: !prev.autoPlayEnabled,
     }));
-  };
-
-  const handleChapterEnd = () => {
-    if (!preferences.autoPlayEnabled) return;
-    const currentIndex = chapters.findIndex(
-      (chapter) => chapter.chapter_number.toString() === chapterId
-    );
-    if (currentIndex < chapters.length - 1) {
-      const nextChapter = chapters[currentIndex + 1];
-      window.location.href = `/novel/${slug}/chapter/${nextChapter.chapter_number}`;
-    }
   };
 
   const formatChapterContent = (content: string) => {
@@ -151,14 +195,6 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
   const audioUrl = selectedChapter?.audio_url;
   const hasValidAudio = isValidAudioUrl(audioUrl);
 
-  useEffect(() => {
-    console.log('Chapter data:', {
-      chapterNumber: selectedChapter?.chapter_number,
-      audioUrl: audioUrl,
-      hasValidAudio: hasValidAudio
-    });
-  }, [selectedChapter, audioUrl, hasValidAudio]);
-
   return (
     <div
       className={`pt-16 min-h-screen ${
@@ -167,6 +203,16 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
           : "bg-gray-50 text-gray-800"
       }`}
     >
+      {/* Navigation Loading Indicator */}
+      {isNavigating && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-primary-600 text-white p-2 text-center text-sm">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+            Loading next chapter...
+          </div>
+        </div>
+      )}
+
       {/* Novel/Chapter Info Bar */}
       <div
         className={`sticky top-16 z-30 ${
@@ -199,9 +245,9 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
             <div className="flex items-center space-x-4">
               <button
                 onClick={toggleAutoPlay}
-                className={`relative p-2 rounded-full flex flex-col items-center justify-center ${
+                className={`relative p-2 rounded-full flex flex-col items-center justify-center transition-all duration-200 ${
                   preferences.autoPlayEnabled
-                    ? "bg-primary-100 text-primary-600"
+                    ? "bg-primary-100 text-primary-600 ring-2 ring-primary-300"
                     : preferences.theme === "dark"
                     ? "hover:bg-gray-700"
                     : "hover:bg-gray-100"
@@ -213,10 +259,13 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
                     : "Auto-play disabled"
                 }
               >
-                <PlayCircle className="w-5 h-5" />
+                <PlayCircle className={`w-5 h-5 ${preferences.autoPlayEnabled ? 'animate-pulse' : ''}`} />
                 <span className="absolute top-8 text-[10px] sm:block hidden leading-none">
                   AutoPlay
                 </span>
+                {preferences.autoPlayEnabled && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                )}
               </button>
 
               <button
@@ -288,7 +337,11 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
                 onEnded={handleChapterEnd}
               />
             ) : (
-              <div className="p-4 bg-gray-50 text-gray-700 rounded-lg text-center">
+              <div className={`p-4 rounded-lg text-center ${
+                preferences.theme === "dark" 
+                  ? "bg-gray-800 text-gray-400" 
+                  : "bg-gray-50 text-gray-700"
+              }`}>
                 <p className="text-sm">Audio not available for this chapter</p>
               </div>
             )}
@@ -296,11 +349,15 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
 
           {/* Audio troubleshooting note - only show if audio should be available */}
           {hasValidAudio && (
-            <div className="mb-4 p-4 bg-warning-50 text-warning-800 rounded-lg">
+            <div className={`mb-4 p-4 rounded-lg ${
+              preferences.theme === "dark"
+                ? "bg-yellow-900/20 text-yellow-300"
+                : "bg-warning-50 text-warning-800"
+            }`}>
               <p className="text-sm">
                 <strong>Audio Troubleshooting:</strong> If audio isn&apos;t playing, try refreshing the page. 
-                AutoPlay only works on Chrome browsers (desktop and Android). 
-                If AutoPlay fails, turn it off, refresh, then turn it back on.
+                AutoPlay may be blocked by your browser - this is normal. If audio fails to start automatically, 
+                you can click the play button manually.
               </p>
             </div>
           )}
@@ -342,7 +399,7 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
       <ChapterSelector
         chapters={chapters}
         currentChapterId={chapterId || ""}
-        novelId={novelId || ""}
+        novelSlug={slug || ""}
         isOpen={isChapterSelectorOpen}
         onClose={() => setIsChapterSelectorOpen(false)}
       />

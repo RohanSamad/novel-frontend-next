@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import React, { useState } from 'react';
@@ -10,7 +8,7 @@ import type { Chapter } from '../../store/slices/chaptersSlice'; // Update path 
 interface ChapterSelectorProps {
   chapters: Chapter[];
   currentChapterId: string;
-  novelId: string;
+  novelSlug: string; // Changed from novelId to novelSlug
   onClose: () => void;
   isOpen: boolean;
 }
@@ -18,7 +16,7 @@ interface ChapterSelectorProps {
 const ChapterSelector: React.FC<ChapterSelectorProps> = ({
   chapters,
   currentChapterId,
-  novelId,
+  novelSlug, // Changed from novelId to novelSlug
   onClose,
   isOpen,
 }) => {
@@ -34,11 +32,10 @@ const ChapterSelector: React.FC<ChapterSelectorProps> = ({
       )
     : chapters;
 
-  const toSlug = (str: string) =>
-    str.toLowerCase().trim().replace(/\s+/g, '-');
-
   const handleChapterSelect = (chapterNumber: string) => {
-    router.push(`/novel/${toSlug(novelId)}/chapter/${chapterNumber}`);
+    const targetUrl = `/novel/${novelSlug}/chapter/${chapterNumber}`;
+    console.log('🚀 ChapterSelector navigating to:', targetUrl);
+    router.push(targetUrl);
     onClose();
   };
 

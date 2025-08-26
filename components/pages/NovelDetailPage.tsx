@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback, useMemo, memo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/hooks/redux";
-import { Star, ChevronRight, Calendar, BookOpen, Loader2 } from "lucide-react";
+import { Star, ChevronRight, Calendar, BookOpen, Loader2, TrendingUp } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import Button from "@/components/ui/Button";
@@ -43,6 +43,15 @@ interface Novel {
   publisher: string;
   publishing_year?: string;
   genres?: Genre[];
+}
+
+interface HotNovel {
+  id: string;
+  title: string;
+  slug?: string;
+  genres?: Genre[];
+  author?: Author;
+  status?: string;
 }
 
 interface NovelStats {
@@ -98,13 +107,40 @@ async function getChaptersData(novelId: string, page: number = 1): Promise<Chapt
     return await response.json();
   } catch (error) {
     console.error("Error fetching chapters:", error);
-    return { 
-      data: [], 
-      current_page: 1, 
-      last_page: 1, 
-      per_page: 20, 
-      total: 0 
+    return {
+      data: [],
+      current_page: 1,
+      last_page: 1,
+      per_page: 20,
+      total: 0
     };
+  }
+}
+
+// API function for fetching all novels for hot novels selection
+async function getAllNovels(): Promise<HotNovel[]> {
+  try {
+    const response = await fetch(
+      `${API_BASE}/api/novels?limit=50`, // Get more novels to have better selection
+      {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        next: {
+          revalidate: 3600, // Cache for 1 hour
+        },
+        signal: AbortSignal.timeout(5000),
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`Failed to fetch novels: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.data || [];
+  } catch (error) {
+    console.error("Error fetching novels:", error);
+    return [];
   }
 }
 
@@ -293,6 +329,100 @@ const ChapterItem = memo(
 
 ChapterItem.displayName = "ChapterItem";
 
+const HotNovelsSidebar = memo(() => {
+  const [hotNovels, setHotNovels] = useState<HotNovel[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAndGenerateHotNovels = async () => {
+      try {
+        const allNovels = await getAllNovels();
+        // Create hot novels with random selection from ALL types of novels (same logic as HomePage)
+        const shuffledAllNovels = [...allNovels].sort(() => Math.random() - 0.5);
+        const hot = shuffledAllNovels.slice(0, 10); // Take 10 novels for sidebar
+        setHotNovels(hot);
+      } catch (error) {
+        console.error("Failed to fetch hot novels:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAndGenerateHotNovels();
+  }, []);
+
+  return (
+  <div className="bg-white rounded-lg shadow-md  top-4">
+  <div className="p-3">
+    <h2 className="text-lg font-serif font-bold  flex items-center">
+      <p className="text-[#1E3A8A]">Hot Novels</p>
+    </h2>
+  </div>
+  
+  {isLoading ? (
+    <div className="p-4 text-center">
+      <Loader2 className="w-5 h-5 animate-spin mx-auto text-primary-600" />
+      <p className="text-sm text-gray-500 mt-2">Loading...</p>
+    </div>
+  ) : hotNovels.length === 0 ? (
+    <div className="p-4 text-center text-gray-500">
+      <p className="text-sm">No hot novels available</p>
+    </div>
+  ) : (
+    <div className="">
+      {hotNovels.map((novel, index) => (
+        <Link
+          key={novel.id}
+          href={`/novel/${novel.slug || novel.id}`}
+          className="block p-[1px] hover:bg-gray-50 transition-colors"
+        >
+          <div className="flex items-start space-x-3 justify-center">
+            <div className="flex-shrink-0 w-6 h-6 border bg-[#DBEAFE] ml-3  rounded-full flex items-center justify-center">
+              <span className="text-[#1E40AF] font-medium text-xs">
+                {index + 1}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-medium text-gray-900 text-sm line-clamp-2 mb-[-2px]">
+                {novel.title}
+              </h3>
+              {novel.genres && novel.genres.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {novel.genres.slice(0, 2).map((genre) => (
+                    <span
+                      key={genre.id}
+                      className="py-1 text-gray-600 rounded text-xs"
+                    >
+                      {genre.name}
+                    </span>
+                  ))}
+                  {novel.genres.length > 2 && (
+                    <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
+                      +{novel.genres.length - 2}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </Link>
+      ))}
+    </div>
+  )}
+  
+  <div className="p-3 border-t border-gray-100">
+    <Link
+      href="/browse?sort=popular"
+      className="text-sm text-primary-600 hover:text-primary-800 font-medium transition-colors"
+    >
+      View all Novels →
+    </Link>
+  </div>
+</div>);
+});
+
+HotNovelsSidebar.displayName = "HotNovelsSidebar";
+
 const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
   initialNovel,
   initialChapters,
@@ -333,7 +463,7 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
     try {
       const nextPage = currentPage + 1;
       const response = await getChaptersData(novelId, nextPage);
-      
+
       if (response.data && response.data.length > 0) {
         setChapters(prev => {
           // Avoid duplicates by filtering out chapters that already exist
@@ -342,7 +472,7 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
           return [...prev, ...newChapters];
         });
         setCurrentPage(nextPage);
-        
+
         // Check if we've reached the last page
         if (nextPage >= response.last_page || chapters.length + response.data.length >= totalChapters) {
           setHasMoreChapters(false);
@@ -364,7 +494,7 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
   const lastChapterRef = useCallback((node: HTMLDivElement | null) => {
     if (isLoadingChapters) return;
     if (observer.current) observer.current.disconnect();
-    
+
     observer.current = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting && hasMoreChapters) {
         loadMoreChapters();
@@ -373,13 +503,13 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
       threshold: 0.1,
       rootMargin: '100px',
     });
-    
+
     if (node) observer.current.observe(node);
   }, [isLoadingChapters, hasMoreChapters, loadMoreChapters]);
 
   // Initialize hasMoreChapters based on initial data
   useEffect(() => {
-    console.log("Initial chapters length:", initialChapters);
+    
     if (initialChapters.length >= totalChapters) {
       setHasMoreChapters(false);
     }
@@ -408,7 +538,7 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
       if (response.data.data) {
         setUserRating(response.data.data.rating);
       }
-    } catch {}
+    } catch { }
   }, [user, novelId]);
 
   const fetchNovelStats = useCallback(async () => {
@@ -511,105 +641,115 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
           <span className="text-gray-900">Novel Details</span>
         </nav>
 
-        <NovelHeader
-          novel={novel}
-          novelStats={novelStats}
-          totalChapters={totalChapters}
-          onStartReading={startReading}
-          onRateClick={handleRateClick}
-          user={user}
-          userRating={userRating}
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-3">
+            <NovelHeader
+              novel={novel}
+              novelStats={novelStats}
+              totalChapters={totalChapters}
+              onStartReading={startReading}
+              onRateClick={handleRateClick}
+              user={user}
+              userRating={userRating}
+            />
 
-        {latestChapter && (
-          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 className="text-xl font-serif font-bold text-primary-900 mb-4">
-              Latest Chapter
-            </h2>
-            <ChapterItem chapter={latestChapter} slug={slug} />
-          </div>
-        )}
+            {latestChapter && (
+              <div className="bg-white rounded-lg w-full shadow-md p-6 mb-8">
+                <h2 className="text-xl font-serif font-bold text-primary-900 mb-4">
+                  Latest Chapter
+                </h2>
+                <ChapterItem chapter={latestChapter} slug={slug} />
+              </div>
+            )}
 
-        {novel.genres && novel.genres.length > 0 && (
-          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 className="text-xl font-serif font-bold text-primary-900 mb-4">
-              Genres
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {novel.genres.map((genre) => (
-                <Link
-                  key={genre.id}
-                  href={`/genre/${genre.slug}`}
-                  className="px-4 py-2 bg-primary-100 text-primary-800 rounded-full text-sm hover:bg-primary-200 transition-colors"
-                >
-                  {genre.name}
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-serif font-bold text-primary-900">
-              Chapters ({totalChapters})
-            </h2>
-          </div>
-
-          {chapters.length === 0 ? (
-            <div className="p-6 text-center text-gray-500">
-              No chapters available yet.
-            </div>
-          ) : (
-            <div className="divide-y max-h-96 overflow-y-auto">
-              {chapters?.map((chapter, index) => (
-                <div
-                  key={chapter.id}
-                  ref={
-                    index === chapters.length - 1 ? lastChapterRef : null
-                  }
-                >
-                  <ChapterItem chapter={chapter} slug={slug} />
+            {novel.genres && novel.genres.length > 0 && (
+              <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h2 className="text-xl font-serif font-bold text-primary-900 mb-4">
+                  Genres
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {novel.genres.map((genre) => (
+                    <Link
+                      key={genre.id}
+                      href={`/genre/${genre.slug}`}
+                      className="px-4 py-2 bg-primary-100 text-primary-800 rounded-full text-sm hover:bg-primary-200 transition-colors"
+                    >
+                      {genre.name}
+                    </Link>
+                  ))}
                 </div>
-              ))}
-              
-              {/* Loading indicator */}
-              {isLoadingChapters && (
-                <div className="p-6 text-center">
-                  <div className="flex items-center justify-center space-x-2">
-                    <Loader2 className="w-5 h-5 animate-spin text-primary-600" />
-                    <span className="text-gray-500">Loading more chapters...</span>
-                  </div>
-                </div>
-              )}
-              
-              {/* Error state */}
-              {chapterError && (
-                <div className="p-6 text-center">
-                  <p className="text-red-500 mb-2">{chapterError}</p>
-                  <Button
-                    variant="secondary"
-                    size="small"
-                    onClick={loadMoreChapters}
-                    disabled={isLoadingChapters}
-                  >
-                    Try Again
-                  </Button>
-                </div>
-              )}
-              
-              {/* End of chapters indicator */}
-              {!hasMoreChapters && chapters.length > 0 && chapters.length >= totalChapters && (
+              </div>
+            )}
+
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="p-6 border-b border-gray-200">
+                <h2 className="text-xl font-serif font-bold text-primary-900">
+                  Chapters ({totalChapters})
+                </h2>
+              </div>
+
+              {chapters.length === 0 ? (
                 <div className="p-6 text-center text-gray-500">
-                  You&apos;ve reached the end of all chapters.
+                  No chapters available yet.
+                </div>
+              ) : (
+                <div className="divide-y max-h-96 overflow-y-auto">
+                  {chapters?.map((chapter, index) => (
+                    <div
+                      key={chapter.id}
+                      ref={
+                        index === chapters.length - 1 ? lastChapterRef : null
+                      }
+                    >
+                      <ChapterItem chapter={chapter} slug={slug} />
+                    </div>
+                  ))}
+
+                  {/* Loading indicator */}
+                  {isLoadingChapters && (
+                    <div className="p-6 text-center">
+                      <div className="flex items-center justify-center space-x-2">
+                        <Loader2 className="w-5 h-5 animate-spin text-primary-600" />
+                        <span className="text-gray-500">Loading more chapters...</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Error state */}
+                  {chapterError && (
+                    <div className="p-6 text-center">
+                      <p className="text-red-500 mb-2">{chapterError}</p>
+                      <Button
+                        variant="secondary"
+                        size="small"
+                        onClick={loadMoreChapters}
+                        disabled={isLoadingChapters}
+                      >
+                        Try Again
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* End of chapters indicator */}
+                  {!hasMoreChapters && chapters.length > 0 && chapters.length >= totalChapters && (
+                    <div className="p-6 text-center text-gray-500">
+                      You&apos;ve reached the end of all chapters.
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          )}
+          </div>
+
+          {/* Sidebar */}
+          <div className="lg:col-span-1">
+            <HotNovelsSidebar />
+          </div>
         </div>
+
+        <p className="text-md mt-8 mx-auto w-fit my-5 text-gray-500">explore, read, and listen more novel audiobooks at our <Link className='text-blue-600' href="/">Homepage</Link></p>
       </div>
-      
-            <p className="text-md mt-2 mx-auto w-fit my-5 text-gray-500">explore, read, and listen more novel audiobooks at our <Link className='text-blue-600' href="/">Homepage</Link></p>
 
       {isRatingModalOpen && (
         <RatingModal

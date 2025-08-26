@@ -21,6 +21,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   novelId,
   chapterId,
   userId,
+  autoPlay = false,
   onEnded,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -37,8 +38,42 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const isMounted = useRef(true);
   const lastInitializedUrl = useRef<string>('');
   const isInitializing = useRef(false);
+  const autoPlayExecuted = useRef(false);
+  
+  // Use refs for all props that shouldn't trigger reinitializations
+  const currentAutoPlayState = useRef(autoPlay);
+  const currentInitialPosition = useRef(initialPosition);
+  const currentOnEnded = useRef(onEnded);
+  const currentUserId = useRef(userId);
+  const currentNovelId = useRef(novelId);
+  const currentChapterId = useRef(chapterId);
   
   const dispatch = useAppDispatch();
+
+  // Update refs when props change - these won't cause reinitializations
+  useEffect(() => {
+    currentAutoPlayState.current = autoPlay;
+  }, [autoPlay]);
+
+  useEffect(() => {
+    currentInitialPosition.current = initialPosition;
+  }, [initialPosition]);
+
+  useEffect(() => {
+    currentOnEnded.current = onEnded;
+  }, [onEnded]);
+
+  useEffect(() => {
+    currentUserId.current = userId;
+  }, [userId]);
+
+  useEffect(() => {
+    currentNovelId.current = novelId;
+  }, [novelId]);
+
+  useEffect(() => {
+    currentChapterId.current = chapterId;
+  }, [chapterId]);
 
   // Simple cleanup function
   const cleanup = useCallback(() => {
@@ -62,19 +97,19 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
   // Save progress
   const saveProgress = useCallback(() => {
-    if (userId && currentTime > 0 && isMounted.current) {
+    if (currentUserId.current && currentTime > 0 && isMounted.current) {
       dispatch(
         updateLocalProgress({
           id: `progress-${Date.now()}`,
-          user_id: userId,
-          novel_id: novelId,
-          chapter_id: chapterId,
+          user_id: currentUserId.current,
+          novel_id: currentNovelId.current,
+          chapter_id: currentChapterId.current,
           progress_timestamp: new Date().toISOString(),
           audio_position: currentTime,
         })
       );
     }
-  }, [userId, novelId, chapterId, currentTime, dispatch]);
+  }, [currentTime, dispatch]);
 
   // Progress tracking
   const startProgressTracking = useCallback(() => {
@@ -97,7 +132,32 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     }
   }, []);
 
-  // Initialize audio - MUCH SIMPLER VERSION
+  // Auto play function with user interaction handling
+  const attemptAutoPlay = useCallback(() => {
+    if (!soundRef.current || !currentAutoPlayState.current || autoPlayExecuted.current) return;
+
+    try {
+      const playResult = soundRef.current.play();
+      
+      // Handle both promise and non-promise returns from Howler
+      if (playResult && typeof playResult.then === 'function') {
+        playResult.then(() => {
+          console.log('Autoplay started successfully');
+          autoPlayExecuted.current = true;
+        }).catch((error) => {
+          console.log('Autoplay prevented by browser:', error);
+        });
+      } else {
+        // For older versions of Howler or when no promise is returned
+        autoPlayExecuted.current = true;
+        console.log('Autoplay attempted (no promise returned)');
+      }
+    } catch (err) {
+      console.log('Autoplay attempt failed:', err);
+    }
+  }, []);
+
+  // Initialize audio - REMOVED ALL autoPlay dependencies
   const initializeAudio = useCallback(() => {
     // Prevent multiple initializations
     if (!audioUrl || 
@@ -113,11 +173,12 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       return;
     }
 
-    console.log('Initializing audio for:', audioUrl);
+    console.log('Initializing audio for:', audioUrl, 'with autoPlay:', currentAutoPlayState.current);
     
     // Mark as initializing to prevent multiple calls
     isInitializing.current = true;
     lastInitializedUrl.current = audioUrl;
+    autoPlayExecuted.current = false; // Reset autoplay flag
     
     // Reset state
     setIsLoading(true);
@@ -135,7 +196,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         volume: isMuted ? 0 : volume,
         
         onload: () => {
-          console.log('Audio loaded');
+          console.log('Audio loaded, autoPlay:', currentAutoPlayState.current);
           if (!isMounted.current) {
             sound.unload();
             return;
@@ -147,14 +208,22 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           isInitializing.current = false; // Mark initialization complete
           
           // Set initial position
-          if (initialPosition > 0 && initialPosition < audioDuration) {
-            sound.seek(initialPosition);
-            setCurrentTime(initialPosition);
+          if (currentInitialPosition.current > 0 && currentInitialPosition.current < audioDuration) {
+            sound.seek(currentInitialPosition.current);
+            setCurrentTime(currentInitialPosition.current);
+          }
+
+          // Attempt autoplay after a short delay to ensure everything is set up
+          if (currentAutoPlayState.current && !autoPlayExecuted.current) {
+            setTimeout(() => {
+              attemptAutoPlay();
+            }, 100);
           }
         },
         
         onplay: () => {
           if (!isMounted.current) return;
+          console.log('Audio started playing');
           setIsPlaying(true);
           startProgressTracking();
         },
@@ -173,9 +242,28 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         
         onend: () => {
           if (!isMounted.current) return;
+          console.log('Audio ended, autoPlay was:', currentAutoPlayState.current);
           setIsPlaying(false);
           stopProgressTracking();
-          if (onEnded) onEnded();
+          
+          // Save final progress
+          if (currentUserId.current && duration > 0) {
+            dispatch(
+              updateLocalProgress({
+                id: `progress-${Date.now()}`,
+                user_id: currentUserId.current,
+                novel_id: currentNovelId.current,
+                chapter_id: currentChapterId.current,
+                progress_timestamp: new Date().toISOString(),
+                audio_position: duration, // Mark as completed
+              })
+            );
+          }
+          
+          // Trigger the onEnded callback (which handles navigation to next chapter)
+          if (currentOnEnded.current) {
+            currentOnEnded.current();
+          }
         },
         
         onseek: () => {
@@ -197,7 +285,12 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         onplayerror: (id: number, error: unknown) => {
           console.error('Play error:', error);
           if (!isMounted.current) return;
-          setError('Failed to play audio');
+          // Don't set error for autoplay failures - they're expected
+          if (!autoPlayExecuted.current && currentAutoPlayState.current) {
+            console.log('Autoplay failed - this is normal browser behavior');
+          } else {
+            setError('Failed to play audio');
+          }
           setIsPlaying(false);
           isInitializing.current = false;
         },
@@ -216,13 +309,15 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       setIsLoading(false);
       isInitializing.current = false;
     }
-  }, []); // NO DEPENDENCIES to prevent infinite loops!
+  }, [audioUrl, volume, isMuted, cleanup, startProgressTracking, stopProgressTracking, attemptAutoPlay, dispatch, duration]); 
+  // REMOVED all autoPlay and other prop dependencies
 
-  // Initialize only when audioUrl changes - SIMPLE EFFECT
+  // Initialize only when audioUrl changes - this is the key fix
   useEffect(() => {
     // Reset state when URL changes
     lastInitializedUrl.current = '';
     isInitializing.current = false;
+    autoPlayExecuted.current = false;
     
     if (audioUrl) {
       // Small delay to ensure state is reset
@@ -232,7 +327,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       
       return () => clearTimeout(timer);
     }
-  }, [audioUrl]); // ONLY audioUrl dependency
+  }, [audioUrl]); // ONLY audioUrl - no other dependencies!
 
   // Progress saving interval
   useEffect(() => {
@@ -340,6 +435,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     setError(null);
     lastInitializedUrl.current = '';
     isInitializing.current = false;
+    autoPlayExecuted.current = false;
     cleanup();
     
     setTimeout(() => {
