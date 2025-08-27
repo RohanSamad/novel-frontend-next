@@ -355,7 +355,7 @@ const HotNovelsSidebar = memo(() => {
   <div className="bg-white rounded-lg shadow-md  top-4">
   <div className="p-3">
     <h2 className="text-lg font-serif font-bold  flex items-center">
-      <p className="text-[#1E3A8A]">Hot Novels</p>
+      <p className="text-[#1E3A8A]">Recommended For You</p>
     </h2>
   </div>
   

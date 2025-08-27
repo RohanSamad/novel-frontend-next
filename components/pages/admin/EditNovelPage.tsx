@@ -73,10 +73,10 @@ const EditNovelPage = () => {
       setGenres(
         Array.isArray(data.data)
           ? data.data.map((g: Genre) => ({
-              id: g.id?.toString() || "",
-              name: g.name || "",
-              slug: g.slug || "",
-            }))
+            id: g.id?.toString() || "",
+            name: g.name || "",
+            slug: g.slug || "",
+          }))
           : []
       );
     } catch (error) {
@@ -158,7 +158,7 @@ const EditNovelPage = () => {
       formDataToSend.append("author", formData.author);
       formDataToSend.append("publisher", formData.publisher);
       formDataToSend.append("publishing_year", formData.publishingYear);
-      formDataToSend.append("synopsis", formData.synopsis);
+      formDataToSend.append("description", formData.synopsis);
       formDataToSend.append("status", formData.status);
       formData.selectedGenres.forEach((genreId) =>
         formDataToSend.append("genres[]", genreId)
@@ -166,6 +166,14 @@ const EditNovelPage = () => {
       if (formData.coverImage) {
         formDataToSend.append("cover_image", formData.coverImage);
       }
+
+      // Add debugging code with correct const declarations
+      console.log('=== FRONTEND DEBUG ===');
+      console.log('formData.synopsis:', formData.synopsis);
+      for (const [key, value] of formDataToSend.entries()) {
+        console.log(`FormData ${key}:`, value);
+      }
+      console.log('=== END FRONTEND DEBUG ===');
 
       await dispatch(updateNovel({ id, data: formDataToSend })).unwrap();
 

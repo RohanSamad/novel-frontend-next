@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, memo } from "react";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import { fetchNovels } from "../../store/slices/novelsSlice";
 import dynamic from "next/dynamic";
-import { Bookmark, Clock, CheckCircle, Flame, Book } from "lucide-react";
+import { Bookmark, Clock, CheckCircle, Flame } from "lucide-react";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import NovelCard from "../novel/NovelCard";
 import { Novel, Chapter } from "../../store/slices/novelsSlice";
@@ -43,14 +43,14 @@ const HotNovelsGrid = memo(({ novels }: { novels: Novel[] }) => {
   if (novels.length === 0) return null;
   
   const featuredNovel = novels[0];
-  const gridNovels = novels.slice(1, 11); // Take 10 novels for responsive grid
+  const gridNovels = novels.slice(1, 11); 
   
   
   return (
-    <div className="grid gap-2 sm:gap-3 h-[320px] sm:h-[320px] md:h-[380px] lg:px-[40px] lg:h-[400px] lg:w-[1250px] w-full 
+    <div className="grid gap-2 sm:gap-3 h-[320px] sm:h-[320px] md:h-[380px]  lg:px-[10px] justify-center lg:h-[400px] lg:w-[1241px] w-full 
                     grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7
                     grid-rows-2">
-      {/* Mobile: Featured novel takes 1 column like others */}
+    
       <div className="col-span-1 sm:col-span-1 md:col-span-2 lg:col-span-2 row-span-1 sm:row-span-2">
         <Link href={`/novel/${featuredNovel.id}`} className="block h-full group">
           <div 
@@ -67,7 +67,7 @@ const HotNovelsGrid = memo(({ novels }: { novels: Novel[] }) => {
             {featuredNovel.status?.toLowerCase() === 'completed' && (
               <div className="absolute top-1 sm:top-2 right-1 sm:right-2">
                 <span className="bg-green-600 text-white text-xs px-1 sm:px-1.5 py-0.5 rounded-full font-normal shadow-md flex items-center gap-0.5 sm:gap-1">
-                  <Book className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                 
                   <span className="hidden sm:inline">Completed</span>
                   <span className="sm:hidden">✓</span>
                 </span>
@@ -179,7 +179,6 @@ const HomePage: React.FC<HomePageProps> = ({
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
-    // Filter completed novels and sort by creation date (newest first)
     const completedFiltered = displayNovels.filter(
       (novel) => novel.status?.toLowerCase() === 'completed'
     );
@@ -187,9 +186,9 @@ const HomePage: React.FC<HomePageProps> = ({
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, 10);
 
-    // Create hot novels with random selection from ALL types of novels
+
     const shuffledAllNovels = [...displayNovels].sort(() => Math.random() - 0.5);
-    const hot = shuffledAllNovels.slice(0, 13); // Need 13 novels (1 featured + 12 grid)
+    const hot = shuffledAllNovels.slice(0, 13);
 
     return {
       sortedNovels: sorted,
@@ -205,6 +204,42 @@ const HomePage: React.FC<HomePageProps> = ({
 
   return (
     <div className="pt-16">
+
+
+ <section className="py-8 bg-white">
+        <div className="container mx-auto px-2">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-serif font-bold text-primary-900 flex items-center">
+              <Flame className="mr-2 text-red-500" />
+            Recommended For You
+            </h2>
+            <Link
+              href="/browse?sort=popular"
+              className="text-primary-600 hover:text-primary-800 text-sm font-medium"
+            >
+              View All
+            </Link>
+          </div>
+
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <LoadingSpinner size="large" />
+            </div>
+          ) : hasError ? (
+            <div className="text-center py-12">
+              <p className="text-error-600">Error loading novels.</p>
+            </div>
+          ) : hotNovels.length > 0 ? (
+            <HotNovelsGrid novels={hotNovels} />
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-500">No hot novels available yet.</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+
       <section className="py-6">
         <div className="container mx-auto px-4">
           <FeaturedNovelCarousel novels={featuredNovels} />
@@ -240,41 +275,22 @@ const HomePage: React.FC<HomePageProps> = ({
         </div>
       </section>
 
-      {/* Hot Novels Section */}
+      
+
       <section className="py-8 bg-white">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-serif font-bold text-primary-900 flex items-center">
-              <Flame className="mr-2 text-red-500" />
-              Hot Novels
+              <Clock className="mr-2 text-primary-600" />
+              Recent Updates
             </h2>
-            <Link
-              href="/browse?sort=popular"
-              className="text-primary-600 hover:text-primary-800 text-sm font-medium"
-            >
-              View All
-            </Link>
           </div>
 
-          {isLoading ? (
-            <div className="flex justify-center py-12">
-              <LoadingSpinner size="large" />
-            </div>
-          ) : hasError ? (
-            <div className="text-center py-12">
-              <p className="text-error-600">Error loading novels.</p>
-            </div>
-          ) : hotNovels.length > 0 ? (
-            <HotNovelsGrid novels={hotNovels} />
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-gray-500">No hot novels available yet.</p>
-            </div>
-          )}
+          <RecentUpdates initialRecentChapters={initialRecentChapters} />
         </div>
       </section>
 
-      {/* Completed Novels Section */}
+
       <section className="py-8 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-6">
@@ -305,19 +321,6 @@ const HomePage: React.FC<HomePageProps> = ({
               <p className="text-gray-500">No completed novels available yet.</p>
             </div>
           )}
-        </div>
-      </section>
-
-      <section className="py-8 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-serif font-bold text-primary-900 flex items-center">
-              <Clock className="mr-2 text-primary-600" />
-              Recent Updates
-            </h2>
-          </div>
-
-          <RecentUpdates initialRecentChapters={initialRecentChapters} />
         </div>
       </section>
     </div>
