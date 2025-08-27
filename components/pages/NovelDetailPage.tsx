@@ -146,6 +146,7 @@ async function getAllNovels(): Promise<HotNovel[]> {
 
 const NovelHeader = memo(
   ({
+    isExtented = true,
     novel,
     novelStats,
     totalChapters,
@@ -153,12 +154,15 @@ const NovelHeader = memo(
     onRateClick,
     user,
     userRating,
+    setIsExtended
   }: {
+    isExtented: boolean;
     novel: Novel;
     novelStats: NovelStats;
     totalChapters: number;
     onStartReading: () => void;
     onRateClick: () => void;
+    setIsExtended: any;
     user: {
       id?: string;
       name?: string | null;
@@ -166,7 +170,7 @@ const NovelHeader = memo(
     } | null;
     userRating: number;
   }) => (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden mb-8">
       <div className="relative">
         <div className="absolute inset-0">
           <Image
@@ -201,7 +205,7 @@ const NovelHeader = memo(
           </div>
 
           <div className="md:w-2/3 lg:w-3/4 md:pl-8 mt-6 md:mt-0">
-            <h1 className="text-3xl md:text-4xl font-serif font-bold text-primary-900 mb-2">
+            <h1 className="text-3xl md:text-4xl font-serif font-bold text-primary-900 dark:text-white mb-2">
               {novel.title}
             </h1>
 
@@ -213,50 +217,51 @@ const NovelHeader = memo(
                   {novelStats.ratingCount} ratings)
                 </span>
               </div>
-              <div className="flex items-center text-primary-600">
+              <div className="flex items-center text-primary-600 dark:text-primary-400">
                 <BookOpen className="w-5 h-5" />
                 <span className="ml-1">{totalChapters} Chapters</span>
               </div>
             </div>
 
             <div className="mb-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-2">
+              <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                 Synopsis
               </h2>
-              <p className="text-gray-600 whitespace-pre-line line-clamp-6">
+              <p className={`text-gray-600 dark:text-gray-300 whitespace-pre-line ${isExtented?"":"line-clamp-6"}`}>
                 {novel.synopsis}
               </p>
+              <button className="text-blue-500 dark:text-blue-400" onClick={()=>{setIsExtended(!isExtented)}}>{isExtented?'See Less':'See More'}</button>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
               <div>
-                <h3 className="text-gray-500 mb-1">Author</h3>
+                <h3 className="text-gray-500 dark:text-gray-400 mb-1">Author</h3>
                 {novel.author_id ? (
                   <Link
                     href={`/author/${novel.author_id}`}
-                    className="text-primary-600 hover:text-primary-800 font-medium transition-colors"
+                    className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 font-medium transition-colors"
                   >
                     {novel.author.name}
                   </Link>
                 ) : (
-                  <p className="text-gray-900 font-medium">
+                  <p className="text-gray-900 dark:text-white font-medium">
                     {novel.author.name}
                   </p>
                 )}
               </div>
               <div>
-                <h3 className="text-gray-500 mb-1">Status</h3>
-                <p className="text-gray-900 font-medium capitalize">
+                <h3 className="text-gray-500 dark:text-gray-400 mb-1">Status</h3>
+                <p className="text-gray-900 dark:text-white font-medium capitalize">
                   {novel.status}
                 </p>
               </div>
               <div>
-                <h3 className="text-gray-500 mb-1">Publisher</h3>
-                <p className="text-gray-900 font-medium">{novel.publisher}</p>
+                <h3 className="text-gray-500 dark:text-gray-400 mb-1">Publisher</h3>
+                <p className="text-gray-900 dark:text-white font-medium">{novel.publisher}</p>
               </div>
               <div>
-                <h3 className="text-gray-500 mb-1">Publishing Year</h3>
-                <p className="text-gray-900 font-medium">
+                <h3 className="text-gray-500 dark:text-gray-400 mb-1">Publishing Year</h3>
+                <p className="text-gray-900 dark:text-white font-medium">
                   {novel.publishing_year || "N/A"}
                 </p>
               </div>
@@ -307,17 +312,17 @@ const ChapterItem = memo(
   ({ chapter, slug }: { chapter: Chapter; slug: string }) => (
     <Link
       href={`/novel/${slug}/chapter/${chapter.chapter_number}`}
-      className="block p-4 hover:bg-gray-50 transition-colors"
+      className="block p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
     >
       <div className="flex items-center">
-        <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center text-primary-800 font-medium flex-shrink-0">
+        <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center text-primary-800 dark:text-primary-200 font-medium flex-shrink-0">
           {chapter.chapter_number}
         </div>
         <div className="ml-4 min-w-0 flex-1">
-          <h3 className="text-lg font-medium text-gray-900 truncate">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white truncate">
             {chapter.title}
           </h3>
-          <p className="text-sm text-gray-500 flex items-center">
+          <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
             <Calendar className="w-4 h-4 mr-1" />
             {new Date(chapter.created_at).toLocaleDateString()}
           </p>
@@ -352,73 +357,73 @@ const HotNovelsSidebar = memo(() => {
   }, []);
 
   return (
-  <div className="bg-white rounded-lg shadow-md  top-4">
-  <div className="p-3">
-    <h2 className="text-lg font-serif font-bold  flex items-center">
-      <p className="text-[#1E3A8A]">Recommended For You</p>
-    </h2>
-  </div>
-  
-  {isLoading ? (
-    <div className="p-4 text-center">
-      <Loader2 className="w-5 h-5 animate-spin mx-auto text-primary-600" />
-      <p className="text-sm text-gray-500 mt-2">Loading...</p>
-    </div>
-  ) : hotNovels.length === 0 ? (
-    <div className="p-4 text-center text-gray-500">
-      <p className="text-sm">No hot novels available</p>
-    </div>
-  ) : (
-    <div className="">
-      {hotNovels.map((novel, index) => (
-        <Link
-          key={novel.id}
-          href={`/novel/${novel.slug || novel.id}`}
-          className="block p-[1px] hover:bg-gray-50 transition-colors"
-        >
-          <div className="flex items-start space-x-3 justify-center">
-            <div className="flex-shrink-0 w-6 h-6 border bg-[#DBEAFE] ml-3  rounded-full flex items-center justify-center">
-              <span className="text-[#1E40AF] font-medium text-xs">
-                {index + 1}
-              </span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-medium text-gray-900 text-sm line-clamp-2 mb-[-2px]">
-                {novel.title}
-              </h3>
-              {novel.genres && novel.genres.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {novel.genres.slice(0, 2).map((genre) => (
-                    <span
-                      key={genre.id}
-                      className="py-1 text-gray-600 rounded text-xs"
-                    >
-                      {genre.name}
-                    </span>
-                  ))}
-                  {novel.genres.length > 2 && (
-                    <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
-                      +{novel.genres.length - 2}
-                    </span>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md top-4">
+      <div className="p-3">
+        <h2 className="text-lg font-serif font-bold flex items-center">
+          <p className="text-[#1E3A8A] dark:text-blue-400">Recommended For You</p>
+        </h2>
+      </div>
+
+      {isLoading ? (
+        <div className="p-4 text-center">
+          <Loader2 className="w-5 h-5 animate-spin mx-auto text-primary-600 dark:text-primary-400" />
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Loading...</p>
+        </div>
+      ) : hotNovels.length === 0 ? (
+        <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+          <p className="text-sm">No hot novels available</p>
+        </div>
+      ) : (
+        <div className="">
+          {hotNovels.map((novel, index) => (
+            <Link
+              key={novel.id}
+              href={`/novel/${novel.slug || novel.id}`}
+              className="block p-[1px] hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
+              <div className="flex items-start space-x-3 justify-center">
+                <div className="flex-shrink-0 w-6 h-6 border bg-[#DBEAFE] dark:bg-blue-900 ml-3 rounded-full flex items-center justify-center">
+                  <span className="text-[#1E40AF] dark:text-blue-300 font-medium text-xs">
+                    {index + 1}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium text-gray-900 dark:text-white text-sm line-clamp-2 mb-[-2px]">
+                    {novel.title}
+                  </h3>
+                  {novel.genres && novel.genres.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {novel.genres.slice(0, 2).map((genre) => (
+                        <span
+                          key={genre.id}
+                          className="py-1 text-gray-600 dark:text-gray-400 rounded text-xs"
+                        >
+                          {genre.name}
+                        </span>
+                      ))}
+                      {novel.genres.length > 2 && (
+                        <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">
+                          +{novel.genres.length - 2}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
-          </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      <div className="p-3 border-t border-gray-100 dark:border-gray-700">
+        <Link
+          href="/browse?sort=popular"
+          className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 font-medium transition-colors"
+        >
+          View all Novels →
         </Link>
-      ))}
-    </div>
-  )}
-  
-  <div className="p-3 border-t border-gray-100">
-    <Link
-      href="/browse?sort=popular"
-      className="text-sm text-primary-600 hover:text-primary-800 font-medium transition-colors"
-    >
-      View all Novels →
-    </Link>
-  </div>
-</div>);
+      </div>
+    </div>);
 });
 
 HotNovelsSidebar.displayName = "HotNovelsSidebar";
@@ -434,10 +439,12 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
 }) => {
   const router = useRouter();
   const { user } = useAppSelector((state) => state.auth);
+//const { isDarkMode } = useAppSelector((state) => state.theme);
 
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
   const [userRating, setUserRating] = useState(0);
   const [isLoadingRating, setIsLoadingRating] = useState(false);
+  const [isExtented, setIsExtended] = useState(false);
 
   const [novelStats, setNovelStats] = useState<NovelStats>(() => ({
     averageRating: parseFloat(initialStats.average_rating?.toString() || "0"),
@@ -509,7 +516,7 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
 
   // Initialize hasMoreChapters based on initial data
   useEffect(() => {
-    
+
     if (initialChapters.length >= totalChapters) {
       setHasMoreChapters(false);
     }
@@ -629,22 +636,24 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
 
   return (
     <>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 bg-gray-50 dark:bg-gray-900">
         <nav
-          className="flex items-center text-sm text-gray-500 mb-6"
+          className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-6"
           aria-label="Breadcrumb"
         >
-          <Link href="/" className="hover:text-primary-600 transition-colors">
+          <Link href="/" className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
             Home
           </Link>
           <ChevronRight className="w-4 h-4 mx-2" aria-hidden="true" />
-          <span className="text-gray-900">Novel Details</span>
+          <span className="text-gray-900 dark:text-white">Novel Details</span>
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-3">
             <NovelHeader
+              isExtented={isExtented}
+              setIsExtended={setIsExtended}
               novel={novel}
               novelStats={novelStats}
               totalChapters={totalChapters}
@@ -655,8 +664,8 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
             />
 
             {latestChapter && (
-              <div className="bg-white rounded-lg w-full shadow-md p-6 mb-8">
-                <h2 className="text-xl font-serif font-bold text-primary-900 mb-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-md p-6 mb-8">
+                <h2 className="text-xl font-serif font-bold text-primary-900 dark:text-white mb-4">
                   Latest Chapter
                 </h2>
                 <ChapterItem chapter={latestChapter} slug={slug} />
@@ -664,8 +673,8 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
             )}
 
             {novel.genres && novel.genres.length > 0 && (
-              <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-                <h2 className="text-xl font-serif font-bold text-primary-900 mb-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+                <h2 className="text-xl font-serif font-bold text-primary-900 dark:text-white mb-4">
                   Genres
                 </h2>
                 <div className="flex flex-wrap gap-2">
@@ -673,7 +682,7 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
                     <Link
                       key={genre.id}
                       href={`/genre/${genre.slug}`}
-                      className="px-4 py-2 bg-primary-100 text-primary-800 rounded-full text-sm hover:bg-primary-200 transition-colors"
+                      className="px-4 py-2 bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200 rounded-full text-sm hover:bg-primary-200 dark:hover:bg-primary-800 transition-colors"
                     >
                       {genre.name}
                     </Link>
@@ -682,19 +691,19 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
               </div>
             )}
 
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="p-6 border-b border-gray-200">
-                <h2 className="text-xl font-serif font-bold text-primary-900">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+              <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h2 className="text-xl font-serif font-bold text-primary-900 dark:text-white">
                   Chapters ({totalChapters})
                 </h2>
               </div>
 
               {chapters.length === 0 ? (
-                <div className="p-6 text-center text-gray-500">
+                <div className="p-6 text-center text-gray-500 dark:text-gray-400">
                   No chapters available yet.
                 </div>
               ) : (
-                <div className="divide-y max-h-96 overflow-y-auto">
+                <div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-96 overflow-y-auto">
                   {chapters?.map((chapter, index) => (
                     <div
                       key={chapter.id}
@@ -710,8 +719,8 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
                   {isLoadingChapters && (
                     <div className="p-6 text-center">
                       <div className="flex items-center justify-center space-x-2">
-                        <Loader2 className="w-5 h-5 animate-spin text-primary-600" />
-                        <span className="text-gray-500">Loading more chapters...</span>
+                        <Loader2 className="w-5 h-5 animate-spin text-primary-600 dark:text-primary-400" />
+                        <span className="text-gray-500 dark:text-gray-400">Loading more chapters...</span>
                       </div>
                     </div>
                   )}
@@ -719,7 +728,7 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
                   {/* Error state */}
                   {chapterError && (
                     <div className="p-6 text-center">
-                      <p className="text-red-500 mb-2">{chapterError}</p>
+                      <p className="text-red-500 dark:text-red-400 mb-2">{chapterError}</p>
                       <Button
                         variant="secondary"
                         size="small"
@@ -733,7 +742,7 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
 
                   {/* End of chapters indicator */}
                   {!hasMoreChapters && chapters.length > 0 && chapters.length >= totalChapters && (
-                    <div className="p-6 text-center text-gray-500">
+                    <div className="p-6 text-center text-gray-500 dark:text-gray-400">
                       You&apos;ve reached the end of all chapters.
                     </div>
                   )}
@@ -748,7 +757,7 @@ const NovelDetailClient: React.FC<NovelDetailClientProps> = ({
           </div>
         </div>
 
-        <p className="text-md mt-8 mx-auto w-fit my-5 text-gray-500">explore, read, and listen more novel audiobooks at our <Link className='text-blue-600' href="/">Homepage</Link></p>
+        <p className="text-md mt-8 mx-auto w-fit my-5 text-gray-500 dark:text-gray-400">explore, read, and listen more novel audiobooks at our <Link className='text-blue-600 dark:text-blue-400' href="/">Homepage</Link></p>
       </div>
 
       {isRatingModalOpen && (

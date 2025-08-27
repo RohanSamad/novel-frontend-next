@@ -10,6 +10,10 @@ import  Link  from 'next/link';
 const BrowseAllPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const { novels, status } = useAppSelector(state => state.novels);
+  
+  // Add theme selector to ensure component re-renders when theme changes
+  //const { isDarkMode } = useAppSelector((state) => state.theme);
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
@@ -43,16 +47,16 @@ const BrowseAllPage: React.FC = () => {
   };
 
   return (
-    <div className="pt-20 min-h-screen bg-gray-50">
+    <div className="pt-20 min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center text-sm text-gray-500 mb-6">
-          <Link href="/" className="hover:text-primary-600">Home</Link>
+        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-6">
+          <Link href="/" className="hover:text-primary-600 dark:hover:text-primary-400">Home</Link>
           <ChevronRight className="w-4 h-4 mx-2" />
-          <span className="text-gray-900">Browse All</span>
+          <span className="text-gray-900 dark:text-white">Browse All</span>
         </div>
 
         <div className="mb-8">
-          <h1 className="text-3xl font-serif font-bold text-primary-900 mb-4">Browse All Novels</h1>
+          <h1 className="text-3xl font-serif font-bold text-primary-900 dark:text-white mb-4">Browse All Novels</h1>
           <form onSubmit={handleSearch} className="max-w-2xl">
             <div className="relative">
               <input
@@ -60,9 +64,9 @@ const BrowseAllPage: React.FC = () => {
                 placeholder="Search by title, author, or genre..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-10 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
             </div>
           </form>
         </div>
@@ -73,7 +77,7 @@ const BrowseAllPage: React.FC = () => {
           </div>
         ) : filteredNovels.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500">No novels found matching your search.</p>
+            <p className="text-gray-500 dark:text-gray-400">No novels found matching your search.</p>
           </div>
         ) : (
           <>
@@ -93,7 +97,7 @@ const BrowseAllPage: React.FC = () => {
                       className={`px-4 py-2 rounded-md ${
                         currentPage === page
                           ? 'bg-primary-600 text-white'
-                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600'
                       }`}
                     >
                       {page}

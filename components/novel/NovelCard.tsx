@@ -5,6 +5,7 @@ import { BookOpen, Clock, AlertCircle, Check} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
+
 interface NovelCardProps {
   novel: Novel;
   size?: "small" | "medium" | "large";
@@ -21,6 +22,9 @@ const NovelCard: React.FC<NovelCardProps> = ({
   onSelect,
 }) => {
   const [imageError, setImageError] = React.useState(false);
+  
+  // Add theme selector to ensure component re-renders when theme changes
+  // const { isDarkMode } = useAppSelector((state) => state.theme);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -77,7 +81,7 @@ const NovelCard: React.FC<NovelCardProps> = ({
     <div
       className={` 
       ${classes.card} 
-      bg-white rounded-lg shadow-md overflow-hidden 
+      bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden 
       transition-all duration-300 hover:-translate-y-1 hover:shadow-lg
       flex flex-col
       ${selectable ? "cursor-pointer" : "cursor-pointer"}
@@ -88,8 +92,8 @@ const NovelCard: React.FC<NovelCardProps> = ({
       <div className="relative w-full">
         <div className={`${classes.imageContainer} relative`}>
           {imageError ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-              <BookOpen className="w-12 h-12 text-gray-400" />
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-700">
+              <BookOpen className="w-12 h-12 text-gray-400 dark:text-gray-500" />
             </div>
           ) : (
             <Image
@@ -116,24 +120,24 @@ const NovelCard: React.FC<NovelCardProps> = ({
          
         </div>
       </div>
-      <div className={`${classes.content} flex-grow flex flex-col bg-white`}>
+      <div className={`${classes.content} flex-grow flex flex-col bg-white dark:bg-gray-800`}>
         <h3
-          className={`${classes.title} font-serif font-bold text-primary-900 line-clamp-1`}
+          className={`${classes.title} font-serif font-bold text-primary-900 dark:text-white line-clamp-1`}
         >
           {novel.title}
         </h3>
-        <p className="text-sm text-gray-600 mt-1">by {novel.author.name}</p>
+        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">by {novel.author.name}</p>
         <div className="mt-2 flex flex-wrap gap-1">
           {novel.genres?.slice(0, 3).map((genre) => ( 
             <span
               key={genre.id}
-              className="inline-block bg-primary-100 text-primary-800 rounded-full px-2 py-0.5 text-xs"
+              className="inline-block bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200 rounded-full px-2 py-0.5 text-xs"
             >
               {genre.name}
             </span>
           ))}
           {novel.genres && novel.genres.length > 3 && (
-            <span className="text-xs text-gray-500">+{novel.genres.length - 3}</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">+{novel.genres.length - 3}</span>
           )}
         </div>
       </div>

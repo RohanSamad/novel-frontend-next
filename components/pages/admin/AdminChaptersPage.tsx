@@ -35,6 +35,9 @@ const AdminChaptersPage: React.FC = () => {
   const { chapters, status: chaptersStatus } = useAppSelector(
     (state) => state.chapters
   );
+  
+  // Add theme state access
+  //const { isDarkMode } = useAppSelector((state) => state.theme);
 
   const [selectedNovelId, setSelectedNovelId] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -311,14 +314,14 @@ const AdminChaptersPage: React.FC = () => {
   };
 
   return (
-    <div className="pt-20 min-h-screen bg-gray-50">
+    <div className="pt-20 min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-serif font-bold text-primary-900">
+            <h1 className="text-3xl font-serif font-bold text-primary-900 dark:text-gray-100">
               Chapter Management
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-300">
               {selectedNovel
                 ? `Managing chapters for "${selectedNovel.title}"`
                 : "Select a novel to manage its chapters"}
@@ -337,12 +340,12 @@ const AdminChaptersPage: React.FC = () => {
         </div>
 
         {/* Novel Selection */}
-        <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
             <div className="w-full md:w-1/2">
               <label
                 htmlFor="novelSelect"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
               >
                 Select Novel
               </label>
@@ -350,7 +353,7 @@ const AdminChaptersPage: React.FC = () => {
                 id="novelSelect"
                 value={selectedNovelId}
                 onChange={handleNovelChange}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
               >
                 <option value="">-- Select a Novel --</option>
                 {novels.map((novel) => (
@@ -369,9 +372,9 @@ const AdminChaptersPage: React.FC = () => {
                     placeholder="Search chapters..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full px-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-10 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500"
                   />
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
                 </form>
               </div>
             )}
@@ -380,48 +383,48 @@ const AdminChaptersPage: React.FC = () => {
 
         {/* Chapters List */}
         {selectedNovelId ? (
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
             {chaptersStatus === "loading" ? (
               <div className="flex justify-center items-center py-12">
                 <LoadingSpinner size="large" />
               </div>
             ) : filteredChapters.length === 0 ? (
               <div className="p-6 text-center">
-                <p className="text-gray-500">
+                <p className="text-gray-500 dark:text-gray-400">
                   No chapters found for this novel
                 </p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full table-auto">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                         Order
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                         Chapter
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                         Title
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                         Audio
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                         Created
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
                     {filteredChapters.map((chapter, index) => (
-                      <tr key={chapter.id} className="hover:bg-gray-50">
+                      <tr key={chapter.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center space-x-1">
-                            <span className="text-sm font-medium text-gray-700">
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                               {chapter.order_index}
                             </span>
                             <div className="flex flex-col">
@@ -430,8 +433,8 @@ const AdminChaptersPage: React.FC = () => {
                                 disabled={index === 0}
                                 className={`${
                                   index === 0
-                                    ? "text-gray-300 cursor-not-allowed"
-                                    : "text-gray-600 hover:text-primary-600"
+                                    ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                                    : "text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
                                 }`}
                               >
                                 <ArrowUp className="w-4 h-4" />
@@ -441,8 +444,8 @@ const AdminChaptersPage: React.FC = () => {
                                 disabled={index === filteredChapters.length - 1}
                                 className={`${
                                   index === filteredChapters.length - 1
-                                    ? "text-gray-300 cursor-not-allowed"
-                                    : "text-gray-600 hover:text-primary-600"
+                                    ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                                    : "text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
                                 }`}
                               >
                                 <ArrowDown className="w-4 h-4" />
@@ -451,17 +454,17 @@ const AdminChaptersPage: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                             Chapter {chapter.chapter_number}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-600">
+                          <div className="text-sm text-gray-600 dark:text-gray-300">
                             {chapter.title}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-600 flex items-center">
+                          <div className="text-sm text-gray-600 dark:text-gray-300 flex items-center">
                             <Music className="w-4 h-4 mr-2" />
                             <span className="truncate max-w-xs">
                               {chapter.audio_url.split("/").pop()}
@@ -469,7 +472,7 @@ const AdminChaptersPage: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-600">
+                          <div className="text-sm text-gray-600 dark:text-gray-300">
                             {new Date(chapter.created_at).toLocaleDateString()}
                           </div>
                         </td>
@@ -489,13 +492,13 @@ const AdminChaptersPage: React.FC = () => {
                                 });
                                 setIsEditModalOpen(true);
                               }}
-                              className="text-primary-600 hover:text-primary-900"
+                              className="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300"
                             >
                               <Edit className="w-5 h-5" />
                             </button>
                             <button
                               onClick={() => handleDeleteClick(chapter)}
-                              className="text-error-600 hover:text-error-900"
+                              className="text-error-600 hover:text-error-900 dark:text-red-400 dark:hover:text-red-300"
                             >
                               <Trash2 className="w-5 h-5" />
                             </button>
@@ -509,7 +512,7 @@ const AdminChaptersPage: React.FC = () => {
             )}
           </div>
         ) : (
-          <div className="bg-white p-6 rounded-lg shadow-md text-center text-gray-500">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center text-gray-500 dark:text-gray-400">
             Please select a novel to manage its chapters
           </div>
         )}
@@ -518,11 +521,11 @@ const AdminChaptersPage: React.FC = () => {
       {/* Delete Confirmation Modal */}
       {isDeleteModalOpen && selectedChapter && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
               Confirm Deletion
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
               Are you sure you want to delete Chapter{" "}
               {selectedChapter.chapter_number}: {selectedChapter.title}? This
               action cannot be undone.
@@ -545,8 +548,8 @@ const AdminChaptersPage: React.FC = () => {
       {/* Add Chapter Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full p-6">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
               Add New Chapter
             </h3>
 
@@ -555,7 +558,7 @@ const AdminChaptersPage: React.FC = () => {
                 <div>
                   <label
                     htmlFor="chapterNumber"
-                    className="block text-sm font-medium text-gray-700 mb-1"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                   >
                     Chapter Number
                   </label>
@@ -569,7 +572,7 @@ const AdminChaptersPage: React.FC = () => {
                         chapterNumber: e.target.value,
                       }))
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                     min="1"
                     required
                   />
@@ -578,7 +581,7 @@ const AdminChaptersPage: React.FC = () => {
                 <div>
                   <label
                     htmlFor="orderIndex"
-                    className="block text-sm font-medium text-gray-700 mb-1"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                   >
                     Order Index
                   </label>
@@ -592,7 +595,7 @@ const AdminChaptersPage: React.FC = () => {
                         orderIndex: e.target.value,
                       }))
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                     min="1"
                     required
                   />
@@ -602,7 +605,7 @@ const AdminChaptersPage: React.FC = () => {
               <div>
                 <label
                   htmlFor="chapterTitle"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
                   Chapter Title
                 </label>
@@ -616,21 +619,21 @@ const AdminChaptersPage: React.FC = () => {
                       title: e.target.value,
                     }))
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Audio File
                 </label>
-                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md">
                   <div className="space-y-1 text-center">
-                    <div className="flex text-sm text-gray-600">
+                    <div className="flex text-sm text-gray-600 dark:text-gray-400">
                       <label
                         htmlFor="audio-upload"
-                        className="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500"
+                        className="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-primary-600 dark:text-primary-400 hover:text-primary-500 dark:hover:text-primary-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500"
                       >
                         <span>Upload a file</span>
                         <input
@@ -645,11 +648,11 @@ const AdminChaptersPage: React.FC = () => {
                       </label>
                       <p className="pl-1">or drag and drop</p>
                     </div>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                       MP3, WAV, M4A or OGG up to 50MB
                     </p>
                     {newChapterData.audioFile && (
-                      <div className="mt-2 flex items-center justify-center text-sm text-gray-600">
+                      <div className="mt-2 flex items-center justify-center text-sm text-gray-600 dark:text-gray-400">
                         <Music className="w-4 h-4 mr-2" />
                         <span className="truncate max-w-xs">
                           {newChapterData.audioFile.name}
@@ -662,7 +665,7 @@ const AdminChaptersPage: React.FC = () => {
                               audioFile: null,
                             }))
                           }
-                          className="ml-2 text-error-600 hover:text-error-900"
+                          className="ml-2 text-error-600 hover:text-error-900 dark:text-red-400 dark:hover:text-red-300"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -675,7 +678,7 @@ const AdminChaptersPage: React.FC = () => {
               <div>
                 <label
                   htmlFor="chapterContent"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
                   Chapter Content
                 </label>
@@ -689,7 +692,7 @@ const AdminChaptersPage: React.FC = () => {
                       contentText: e.target.value,
                     }))
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 placeholder-gray-400 dark:placeholder-gray-500"
                   placeholder="Enter chapter content (HTML supported)"
                   required
                 ></textarea>
@@ -728,8 +731,8 @@ const AdminChaptersPage: React.FC = () => {
       {/* Edit Chapter Modal */}
       {isEditModalOpen && selectedChapter && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full p-6">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
               Edit Chapter
             </h3>
 
@@ -738,7 +741,7 @@ const AdminChaptersPage: React.FC = () => {
                 <div>
                   <label
                     htmlFor="editChapterNumber"
-                    className="block text-sm font-medium text-gray-700 mb-1"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                   >
                     Chapter Number
                   </label>
@@ -752,7 +755,7 @@ const AdminChaptersPage: React.FC = () => {
                         chapterNumber: e.target.value,
                       }))
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                     min="1"
                     required
                   />
@@ -761,7 +764,7 @@ const AdminChaptersPage: React.FC = () => {
                 <div>
                   <label
                     htmlFor="editOrderIndex"
-                    className="block text-sm font-medium text-gray-700 mb-1"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                   >
                     Order Index
                   </label>
@@ -775,7 +778,7 @@ const AdminChaptersPage: React.FC = () => {
                         orderIndex: e.target.value,
                       }))
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                     min="1"
                     required
                   />
@@ -785,7 +788,7 @@ const AdminChaptersPage: React.FC = () => {
               <div>
                 <label
                   htmlFor="editChapterTitle"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
                   Chapter Title
                 </label>
@@ -799,7 +802,7 @@ const AdminChaptersPage: React.FC = () => {
                       title: e.target.value,
                     }))
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   required
                 />
               </div>
@@ -807,7 +810,7 @@ const AdminChaptersPage: React.FC = () => {
               <div>
                 <label
                   htmlFor="editAudioUrl"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
                   Audio URL
                 </label>
@@ -821,19 +824,19 @@ const AdminChaptersPage: React.FC = () => {
                       audioUrl: e.target.value,
                     }))
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 placeholder-gray-400 dark:placeholder-gray-500"
                   placeholder="Enter audio URL or upload a new file below"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Audio File
                 </label>
-                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md">
                   <div className="space-y-1 text-center">
                     {editFormData.audioFile ? (
-                      <div className="flex items-center justify-center text-sm text-gray-600">
+                      <div className="flex items-center justify-center text-sm text-gray-600 dark:text-gray-400">
                         <Music className="w-4 h-4 mr-2" />
                         <span className="truncate max-w-xs">
                           {editFormData.audioFile.name}
@@ -846,24 +849,24 @@ const AdminChaptersPage: React.FC = () => {
                               audioFile: null,
                             }))
                           }
-                          className="ml-2 text-error-600 hover:text-error-900"
+                          className="ml-2 text-error-600 hover:text-error-900 dark:text-red-400 dark:hover:text-red-300"
                         >
                           <X className="w-4 h-4" />
                         </button>
                       </div>
                     ) : (
                       <>
-                        <div className="flex items-center justify-center text-sm text-gray-600 mb-4">
+                        <div className="flex items-center justify-center text-sm text-gray-600 dark:text-gray-400 mb-4">
                           <Music className="w-4 h-4 mr-2" />
                           <span className="truncate max-w-xs">
                             Current:{" "}
                             {selectedChapter.audio_url.split("/").pop()}
                           </span>
                         </div>
-                        <div className="flex text-sm text-gray-600">
+                        <div className="flex text-sm text-gray-600 dark:text-gray-400">
                           <label
                             htmlFor="edit-audio-upload"
-                            className="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500"
+                            className="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-primary-600 dark:text-primary-400 hover:text-primary-500 dark:hover:text-primary-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500"
                           >
                             <span>Upload new file</span>
                             <input
@@ -877,7 +880,7 @@ const AdminChaptersPage: React.FC = () => {
                           </label>
                           <p className="pl-1">or drag and drop</p>
                         </div>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                           MP3, WAV, M4A or OGG up to 50MB
                         </p>
                       </>
@@ -889,7 +892,7 @@ const AdminChaptersPage: React.FC = () => {
               <div>
                 <label
                   htmlFor="editChapterContent"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
                   Chapter Content
                 </label>
@@ -903,7 +906,7 @@ const AdminChaptersPage: React.FC = () => {
                       contentText: e.target.value,
                     }))
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   required
                 ></textarea>
               </div>

@@ -24,6 +24,9 @@ const EditNovelPage = () => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { selectedNovel, status } = useAppSelector((state) => state.novels);
+  
+  // Add theme selector to ensure component re-renders when theme changes
+ // const { isDarkMode } = useAppSelector((state) => state.theme);
 
   const [isLoading, setIsLoading] = useState(false);
   const [genres, setGenres] = useState<Genre[]>([]);
@@ -94,7 +97,7 @@ const EditNovelPage = () => {
 
   if (status === "loading" && !selectedNovel) {
     return (
-      <div className="pt-20 min-h-screen bg-gray-50 flex justify-center items-center">
+      <div className="pt-20 min-h-screen bg-gray-50 dark:bg-gray-900 flex justify-center items-center">
         <LoadingSpinner size="large" />
       </div>
     );
@@ -191,22 +194,22 @@ const EditNovelPage = () => {
   };
 
   return (
-    <div className="pt-20 min-h-screen bg-gray-50">
+    <div className="pt-20 min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <button
             onClick={() => router.push("/admin/novels")}
-            className="flex items-center text-gray-600 hover:text-gray-900 mb-6"
+            className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
             Back to Novels
           </button>
 
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="p-6 border-b border-gray-200">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center">
-                <BookOpen className="h-8 w-8 text-primary-600 mr-3" />
-                <h1 className="text-2xl font-serif font-bold text-gray-900">
+                <BookOpen className="h-8 w-8 text-primary-600 dark:text-primary-400 mr-3" />
+                <h1 className="text-2xl font-serif font-bold text-gray-900 dark:text-white">
                   Edit Novel
                 </h1>
               </div>
@@ -216,7 +219,7 @@ const EditNovelPage = () => {
               <div>
                 <label
                   htmlFor="title"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
                   Title
                 </label>
@@ -228,14 +231,14 @@ const EditNovelPage = () => {
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, title: e.target.value }))
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="author"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
                   Author
                 </label>
@@ -247,14 +250,14 @@ const EditNovelPage = () => {
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, author: e.target.value }))
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="publisher"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
                   Publisher
                 </label>
@@ -269,14 +272,14 @@ const EditNovelPage = () => {
                       publisher: e.target.value,
                     }))
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="publishingYear"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
                   Publishing Year
                 </label>
@@ -293,16 +296,16 @@ const EditNovelPage = () => {
                       publishingYear: e.target.value,
                     }))
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Cover Image
                 </label>
                 <div className="flex items-center space-x-4">
-                  <div className="w-32 h-44 bg-gray-100 rounded-lg overflow-hidden">
+                  <div className="w-32 h-44 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
                     {formData.coverImage ? (
                       <div className="w-full h-full relative">
                         {/* <Image
@@ -326,7 +329,7 @@ const EditNovelPage = () => {
                         />
                       </div>
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400">
+                      <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
                         <Upload className="w-8 h-8" />
                       </div>
                     )}
@@ -341,12 +344,12 @@ const EditNovelPage = () => {
                     />
                     <label
                       htmlFor="cover-image"
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 cursor-pointer"
+                      className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 cursor-pointer"
                     >
                       <Upload className="w-4 h-4 mr-2" />
                       Upload New Cover
                     </label>
-                    <p className="mt-2 text-xs text-gray-500">
+                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                       Max size: 2MB. Formats: PNG, JPEG, WebP
                     </p>
                   </div>
@@ -356,7 +359,7 @@ const EditNovelPage = () => {
               <div>
                 <label
                   htmlFor="status"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
                   Status
                 </label>
@@ -366,7 +369,7 @@ const EditNovelPage = () => {
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, status: e.target.value }))
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   <option value="ongoing">Ongoing</option>
                   <option value="completed">Completed</option>
@@ -375,17 +378,17 @@ const EditNovelPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Genres (Select multiple)
                 </label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {genres.map((genre) => (
                     <label
                       key={genre.id}
-                      className="relative flex items-start p-3 rounded-lg border cursor-pointer focus:outline-none"
+                      className="relative flex items-start p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 cursor-pointer focus:outline-none"
                     >
                       <div className="min-w-0 flex-1 text-sm">
-                        <div className="font-medium text-gray-700">
+                        <div className="font-medium text-gray-700 dark:text-gray-300">
                           {genre.name}
                         </div>
                       </div>
@@ -394,7 +397,7 @@ const EditNovelPage = () => {
                           type="checkbox"
                           checked={formData.selectedGenres.includes(genre.id)}
                           onChange={() => handleGenreToggle(genre.id)}
-                          className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                          className="h-4 w-4 text-primary-600 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded focus:ring-primary-500"
                         />
                       </div>
                     </label>
@@ -405,7 +408,7 @@ const EditNovelPage = () => {
               <div>
                 <label
                   htmlFor="synopsis"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
                   Synopsis
                 </label>
@@ -420,7 +423,7 @@ const EditNovelPage = () => {
                       synopsis: e.target.value,
                     }))
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="Write a compelling description of the novel..."
                 />
               </div>

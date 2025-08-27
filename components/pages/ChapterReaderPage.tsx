@@ -6,7 +6,7 @@ import { useAppSelector } from "@/hooks/redux";
 import AudioPlayer from "@/components/chapter/AudioPlayer";
 import ChapterNavigation from "@/components/chapter/ChapterNavigation";
 import ChapterSelector from "@/components/chapter/ChapterSelector";
-import { ArrowLeft, BookOpen, Moon, PlayCircle, Sun } from "lucide-react";
+import { ArrowLeft, BookOpen,  PlayCircle } from "lucide-react";
 
 interface ChapterPreferences {
   theme: "light" | "dark";
@@ -51,6 +51,8 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
 }) => {
   const { userProgress } = useAppSelector((state) => state.progress);
   const { user } = useAppSelector((state) => state.auth);
+  // Access global theme state from Redux
+  const { isDarkMode } = useAppSelector((state) => state.theme);
   const router = useRouter();
 
   const loadPreferences = (): ChapterPreferences => {
@@ -76,6 +78,14 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
   );
   const [isChapterSelectorOpen, setIsChapterSelectorOpen] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
+
+  // Sync local theme with global Redux theme
+  useEffect(() => {
+    setPreferences((prev) => ({
+      ...prev,
+      theme: isDarkMode ? "dark" : "light",
+    }));
+  }, [isDarkMode]);
 
   // Save preferences to localStorage whenever they change
   useEffect(() => {
@@ -299,11 +309,11 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
                 }`}
                 aria-label="Toggle theme"
               >
-                {preferences.theme === "dark" ? (
+                {/* {preferences.theme === "dark" ? (
                   <Sun className="w-5 h-5" />
                 ) : (
                   <Moon className="w-5 h-5" />
-                )}
+                )} */}
               </button>
               <button
                 onClick={() => setIsChapterSelectorOpen(true)}

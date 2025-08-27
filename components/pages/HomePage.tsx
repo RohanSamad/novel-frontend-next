@@ -13,14 +13,14 @@ const FeaturedNovelCarousel = dynamic(
   () => import("../novel/FeaturedNovelCarousel"),
   {
     loading: () => (
-      <div className="w-full h-96 bg-gray-100 rounded-lg animate-pulse" />
+      <div className="w-full h-96 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse" />
     ),
     ssr: false,
   }
 );
 
 const RecentUpdates = dynamic(() => import("../novel/RecentUpdates"), {
-  loading: () => <div className="h-64 bg-gray-100 rounded-lg animate-pulse" />,
+  loading: () => <div className="h-64 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse" />,
   ssr: false,
 });
 
@@ -54,7 +54,7 @@ const HotNovelsGrid = memo(({ novels }: { novels: Novel[] }) => {
       <div className="col-span-1 sm:col-span-1 md:col-span-2 lg:col-span-2 row-span-1 sm:row-span-2">
         <Link href={`/novel/${featuredNovel.id}`} className="block h-full group">
           <div 
-            className="relative h-full rounded-lg overflow-hidden shadow-md group-hover:shadow-xl transition-shadow duration-300 bg-gray-300"
+            className="relative h-full rounded-lg overflow-hidden shadow-md group-hover:shadow-xl transition-shadow duration-300 bg-gray-300 dark:bg-gray-600"
             style={{
               backgroundImage: `url(${featuredNovel.cover_image_url || 'https://via.placeholder.com/200x300/cccccc/666666?text=No+Cover'})`,
               backgroundSize: 'cover',
@@ -124,7 +124,7 @@ const HotNovelsGrid = memo(({ novels }: { novels: Novel[] }) => {
           <div key={novel.id} className={visibilityClasses}>
             <Link href={`/novel/${novel.id}`} className="block h-full group">
               <div 
-                className="relative h-full rounded-lg overflow-hidden shadow-md group-hover:shadow-xl transition-shadow duration-300 bg-gray-300"
+                className="relative h-full rounded-lg overflow-hidden shadow-md group-hover:shadow-xl transition-shadow duration-300 bg-gray-300 dark:bg-gray-600"
                 style={{
                   backgroundImage: `url(${novel.cover_image_url || 'https://via.placeholder.com/150x200/cccccc/666666?text=No+Cover'})`,
                   backgroundSize: 'cover',
@@ -164,6 +164,9 @@ const HomePage: React.FC<HomePageProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const { novels, status, error } = useAppSelector((state) => state.novels);
+  
+  // Add theme selector to ensure component re-renders when theme changes
+  //const { isDarkMode } = useAppSelector((state) => state.theme);
 
   useEffect(() => {
     if (initialNovels.length === 0 && status === "idle") {
@@ -205,17 +208,23 @@ const HomePage: React.FC<HomePageProps> = ({
   return (
     <div className="pt-16">
 
+    <section className="py-6 bg-white dark:bg-gray-900">
+        <div className="container mx-auto px-4">
+          <FeaturedNovelCarousel novels={featuredNovels} />
+        </div>
+      </section>
 
- <section className="py-8 bg-white">
+
+ <section className="py-8 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-2">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-serif font-bold text-primary-900 flex items-center">
+            <h2 className="text-2xl font-serif font-bold text-primary-900 dark:text-white flex items-center">
               <Flame className="mr-2 text-red-500" />
             Recommended For You
             </h2>
             <Link
               href="/browse?sort=popular"
-              className="text-primary-600 hover:text-primary-800 text-sm font-medium"
+              className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 text-sm font-medium"
             >
               View All
             </Link>
@@ -227,35 +236,31 @@ const HomePage: React.FC<HomePageProps> = ({
             </div>
           ) : hasError ? (
             <div className="text-center py-12">
-              <p className="text-error-600">Error loading novels.</p>
+              <p className="text-error-600 dark:text-red-400">Error loading novels.</p>
             </div>
           ) : hotNovels.length > 0 ? (
             <HotNovelsGrid novels={hotNovels} />
           ) : (
             <div className="text-center py-12">
-              <p className="text-gray-500">No hot novels available yet.</p>
+              <p className="text-gray-500 dark:text-gray-400">No hot novels available yet.</p>
             </div>
           )}
         </div>
       </section>
 
 
-      <section className="py-6">
-        <div className="container mx-auto px-4">
-          <FeaturedNovelCarousel novels={featuredNovels} />
-        </div>
-      </section>
+  
 
-      <section className="py-8 bg-gray-50">
+      <section className="py-8 bg-gray-50 dark:bg-gray-800">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-serif font-bold text-primary-900 flex items-center">
-              <Bookmark className="mr-2 text-primary-600" />
+            <h2 className="text-2xl font-serif font-bold text-primary-900 dark:text-white flex items-center">
+              <Bookmark className="mr-2 text-primary-600 dark:text-primary-400" />
               Newest Novels
             </h2>
             <Link
               href="/browse"
-              className="text-primary-600 hover:text-primary-800 text-sm font-medium"
+              className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 text-sm font-medium"
             >
               View All
             </Link>
@@ -267,7 +272,7 @@ const HomePage: React.FC<HomePageProps> = ({
             </div>
           ) : hasError ? (
             <div className="text-center py-12">
-              <p className="text-error-600">Error loading novels.</p>
+              <p className="text-error-600 dark:text-red-400">Error loading novels.</p>
             </div>
           ) : (
             <NovelGrid novels={newestNovels} />
@@ -277,11 +282,11 @@ const HomePage: React.FC<HomePageProps> = ({
 
       
 
-      <section className="py-8 bg-white">
+      <section className="py-8 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-serif font-bold text-primary-900 flex items-center">
-              <Clock className="mr-2 text-primary-600" />
+            <h2 className="text-2xl font-serif font-bold text-primary-900 dark:text-white flex items-center">
+              <Clock className="mr-2 text-primary-600 dark:text-primary-400" />
               Recent Updates
             </h2>
           </div>
@@ -291,16 +296,16 @@ const HomePage: React.FC<HomePageProps> = ({
       </section>
 
 
-      <section className="py-8 bg-gray-50">
+      <section className="py-8 bg-gray-50 dark:bg-gray-800">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-serif font-bold text-primary-900 flex items-center">
+            <h2 className="text-2xl font-serif font-bold text-primary-900 dark:text-white flex items-center">
               <CheckCircle className="mr-2 text-green-600" />
               Completed Novels
             </h2>
             <Link
               href="/browse?status=completed"
-              className="text-primary-600 hover:text-primary-800 text-sm font-medium"
+              className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 text-sm font-medium"
             >
               View All
             </Link>
@@ -312,13 +317,13 @@ const HomePage: React.FC<HomePageProps> = ({
             </div>
           ) : hasError ? (
             <div className="text-center py-12">
-              <p className="text-error-600">Error loading novels.</p>
+              <p className="text-error-600 dark:text-red-400">Error loading novels.</p>
             </div>
           ) : completedNovels.length > 0 ? (
             <NovelGrid novels={completedNovels} />
           ) : (
             <div className="text-center py-12">
-              <p className="text-gray-500">No completed novels available yet.</p>
+              <p className="text-gray-500 dark:text-gray-400">No completed novels available yet.</p>
             </div>
           )}
         </div>
