@@ -143,12 +143,7 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
     setIsNavigating(false);
   }, [chapterId]);
 
-  const toggleTheme = () => {
-    setPreferences((prev) => ({
-      ...prev,
-      theme: prev.theme === "light" ? "dark" : "light",
-    }));
-  };
+ 
 
   const increaseFontSize = () => {
     setPreferences((prev) => ({
@@ -300,7 +295,7 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
               >
                 <span className="font-medium">A+</span>
               </button>
-              <button
+              {/* <button
                 onClick={toggleTheme}
                 className={`p-2 rounded-full ${
                   preferences.theme === "dark"
@@ -309,12 +304,12 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
                 }`}
                 aria-label="Toggle theme"
               >
-                {/* {preferences.theme === "dark" ? (
+                {preferences.theme === "dark" ? (
                   <Sun className="w-5 h-5" />
                 ) : (
                   <Moon className="w-5 h-5" />
-                )} */}
-              </button>
+                )}
+              </button> */}
               <button
                 onClick={() => setIsChapterSelectorOpen(true)}
                 className={`p-2 rounded-full ${
