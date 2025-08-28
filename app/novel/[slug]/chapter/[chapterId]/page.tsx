@@ -13,11 +13,7 @@ const getCachedNovelData = cache(async (novelId: string) => {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-        },
-        next: { 
-          revalidate: 3600,
-          tags: [`novel-${novelId}`] 
-        },
+        }
       }
     );
 
@@ -41,11 +37,7 @@ const getCachedChapterData = cache(async (novelId: string, chapterId: string) =>
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-        },
-        next: { 
-          revalidate: 3600,
-          tags: [`chapter-${novelId}-${chapterId}`] 
-        },
+        }
       }
     );
 
