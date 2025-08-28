@@ -14,12 +14,7 @@ const getCachedNovelData = cache(async (novelId: string) => {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-        },
-        next: {
-          revalidate: 3600, // Cache for 1 hour
-          tags: [`novel-${novelId}`],
-        },
-        signal: AbortSignal.timeout(10000),
+        }
       }
     );
 
