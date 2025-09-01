@@ -39,6 +39,22 @@ const NovelGrid = memo(({ novels }: { novels: Novel[] }) => (
 
 NovelGrid.displayName = "NovelGrid";
 
+// Helper function to create URL-friendly slug from title
+const createSlug = (title: string) => {
+  if (!title || typeof title !== 'string') {
+    return 'untitled-novel';
+  }
+  
+  const slug = title
+    .replace(/[^a-zA-Z0-9\s]+/g, '') // Remove special chars but keep spaces and preserve case
+    .trim()
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/(^-|-$)/g, ''); // Remove leading/trailing hyphens
+  
+  // If slug is empty after processing, return a default
+  return slug || 'untitled-novel';
+};
+
 const HotNovelsGrid = memo(({ novels }: { novels: Novel[] }) => {
   if (novels.length === 0) return null;
   
@@ -52,7 +68,7 @@ const HotNovelsGrid = memo(({ novels }: { novels: Novel[] }) => {
                     grid-rows-2">
     
       <div className="col-span-1 sm:col-span-1 md:col-span-2 lg:col-span-2 row-span-1 sm:row-span-2">
-        <Link href={`/novel/${featuredNovel.id}`} className="block h-full group">
+        <Link href={`/novel/${createSlug(featuredNovel.title)}`} className="block h-full group">
           <div 
             className="relative h-full rounded-lg overflow-hidden shadow-md group-hover:shadow-xl transition-shadow duration-300 bg-gray-300 dark:bg-gray-600"
             style={{
@@ -122,7 +138,7 @@ const HotNovelsGrid = memo(({ novels }: { novels: Novel[] }) => {
         
         return (
           <div key={novel.id} className={visibilityClasses}>
-            <Link href={`/novel/${novel.id}`} className="block h-full group">
+            <Link href={`/novel/${createSlug(novel.title)}`} className="block h-full group">
               <div 
                 className="relative h-full rounded-lg overflow-hidden shadow-md group-hover:shadow-xl transition-shadow duration-300 bg-gray-300 dark:bg-gray-600"
                 style={{
