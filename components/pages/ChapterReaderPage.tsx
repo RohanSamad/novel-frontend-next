@@ -46,7 +46,7 @@ const AdSlot: React.FC<{
   id: string;
   className?: string;
   theme?: "light" | "dark";
-}> = ({ id, className = "", theme = "light" }) => {
+}> = ({ id, className = ""}) => {
   useEffect(() => {
     // Initialize ad slot when component mounts
     const initAd = () => {
