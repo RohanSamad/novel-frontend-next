@@ -15,6 +15,20 @@ interface AudioPlayerProps {
   onEnded?: () => void;
 }
 
+// At the top of your component, initialize volume state with saved value
+const getInitialVolume = (): number => {
+  if (typeof window !== 'undefined') {
+    const savedVolume = localStorage.getItem('audioVolume');
+    if (savedVolume !== null) {
+      const vol = parseFloat(savedVolume);
+      if (!isNaN(vol) && vol >= 0 && vol <= 1) {
+        return vol;
+      }
+    }
+  }
+  return 1.0; // Changed from 0.7 to 1.0
+};
+
 const AudioPlayer: React.FC<AudioPlayerProps> = ({
   audioUrl,
   initialPosition = 0,
@@ -27,7 +41,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(initialPosition);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(0.7);
+  const [volume, setVolume] = useState(getInitialVolume); // Use the function here
   const [isMuted, setIsMuted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -101,105 +115,11 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     }
   }, [playbackRate, speedOptions]);
 
-  // Load saved volume from localStorage
-  useEffect(() => {
-    const savedVolume = localStorage.getItem('audioVolume');
-    if (savedVolume !== null) {
-      const vol = parseFloat(savedVolume);
-      if (!isNaN(vol) && vol >= 0 && vol <= 1) {
-        setVolume(vol);
-        // Update Howler's global volume
-        Howler.volume(vol);
-      }
-    }
-  }, []);
-
-  // Save volume to localStorage when it changes
+  // Simplified volume effects - save volume and update Howler whenever it changes
   useEffect(() => {
     localStorage.setItem('audioVolume', volume.toString());
+    Howler.volume(volume);
   }, [volume]);
-
-  // Simple cleanup function
-  const cleanup = useCallback(() => {
-    console.log('Cleaning up audio...');
-    
-    if (progressInterval.current) {
-      clearInterval(progressInterval.current);
-      progressInterval.current = null;
-    }
-    
-    if (soundRef.current) {
-      try {
-        soundRef.current.stop();
-        soundRef.current.unload();
-      } catch (e) {
-        console.warn('Cleanup error:', e);
-      }
-      soundRef.current = null;
-    }
-  }, []);
-
-  // Save progress
-  const saveProgress = useCallback(() => {
-    if (currentUserId.current && currentTime > 0 && isMounted.current) {
-      dispatch(
-        updateLocalProgress({
-          id: `progress-${Date.now()}`,
-          user_id: currentUserId.current,
-          novel_id: currentNovelId.current,
-          chapter_id: currentChapterId.current,
-          progress_timestamp: new Date().toISOString(),
-          audio_position: currentTime,
-        })
-      );
-    }
-  }, [currentTime, dispatch]);
-
-  // Progress tracking
-  const startProgressTracking = useCallback(() => {
-    if (progressInterval.current) return; // Don't start if already running
-    
-    progressInterval.current = window.setInterval(() => {
-      if (soundRef.current && soundRef.current.playing() && isMounted.current) {
-        const seekTime = soundRef.current.seek() as number;
-        if (isFinite(seekTime) && seekTime >= 0) {
-          setCurrentTime(seekTime);
-        }
-      }
-    }, 100);
-  }, []);
-
-  const stopProgressTracking = useCallback(() => {
-    if (progressInterval.current) {
-      clearInterval(progressInterval.current);
-      progressInterval.current = null;
-    }
-  }, []);
-
-  // Auto play function with user interaction handling
-  const attemptAutoPlay = useCallback(() => {
-    if (!soundRef.current || !currentAutoPlayState.current || autoPlayExecuted.current) return;
-
-  try {
-    const playResult = soundRef.current.play() as number | Promise<any>;
-  
-  // Handle both promise and non-promise returns from Howler
-  if (playResult && typeof (playResult as any).then === 'function') {
-    (playResult as Promise<any>).then(() => {
-      console.log('Autoplay started successfully');
-      autoPlayExecuted.current = true;
-    }).catch((error) => {
-      console.log('Autoplay prevented by browser:', error);
-    });
-  } else {
-    // For older versions of Howler or when no promise is returned
-    autoPlayExecuted.current = true;
-    console.log('Autoplay attempted (no promise returned)');
-  }
-} catch (err) {
-  console.log('Autoplay attempt failed:', err);
-}
-  }, []);
 
   // Initialize audio - REMOVED ALL autoPlay dependencies
   const initializeAudio = useCallback(() => {
@@ -237,7 +157,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         src: [audioUrl],
         html5: true,
         preload: true,
-        volume: isMuted ? 0 : volume,
+        volume: isMuted ? 0 : volume, // This will now use the saved volume
         rate: playbackRate, // Set initial playback rate
         
         onload: () => {
@@ -404,6 +324,88 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       }
     };
   }, [cleanup]);
+
+  // Auto play function with user interaction handling
+  const attemptAutoPlay = useCallback(() => {
+    if (!soundRef.current || !currentAutoPlayState.current || autoPlayExecuted.current) return;
+
+  try {
+    const playResult = soundRef.current.play() as number | Promise<any>;
+  
+  // Handle both promise and non-promise returns from Howler
+  if (playResult && typeof (playResult as any).then === 'function') {
+    (playResult as Promise<any>).then(() => {
+      console.log('Autoplay started successfully');
+      autoPlayExecuted.current = true;
+    }).catch((error) => {
+      console.log('Autoplay prevented by browser:', error);
+    });
+  } else {
+    // For older versions of Howler or when no promise is returned
+    autoPlayExecuted.current = true;
+    console.log('Autoplay attempted (no promise returned)');
+  }
+} catch (err) {
+  console.log('Autoplay attempt failed:', err);
+}
+  }, []);
+
+  // Progress tracking
+  const startProgressTracking = useCallback(() => {
+    if (progressInterval.current) return; // Don't start if already running
+    
+    progressInterval.current = window.setInterval(() => {
+      if (soundRef.current && soundRef.current.playing() && isMounted.current) {
+        const seekTime = soundRef.current.seek() as number;
+        if (isFinite(seekTime) && seekTime >= 0) {
+          setCurrentTime(seekTime);
+        }
+      }
+    }, 100);
+  }, []);
+
+  const stopProgressTracking = useCallback(() => {
+    if (progressInterval.current) {
+      clearInterval(progressInterval.current);
+      progressInterval.current = null;
+    }
+  }, []);
+
+  // Save progress
+  const saveProgress = useCallback(() => {
+    if (currentUserId.current && currentTime > 0 && isMounted.current) {
+      dispatch(
+        updateLocalProgress({
+          id: `progress-${Date.now()}`,
+          user_id: currentUserId.current,
+          novel_id: currentNovelId.current,
+          chapter_id: currentChapterId.current,
+          progress_timestamp: new Date().toISOString(),
+          audio_position: currentTime,
+        })
+      );
+    }
+  }, [currentTime, dispatch]);
+
+  // Simple cleanup function
+  const cleanup = useCallback(() => {
+    console.log('Cleaning up audio...');
+    
+    if (progressInterval.current) {
+      clearInterval(progressInterval.current);
+      progressInterval.current = null;
+    }
+    
+    if (soundRef.current) {
+      try {
+        soundRef.current.stop();
+        soundRef.current.unload();
+      } catch (e) {
+        console.warn('Cleanup error:', e);
+      }
+      soundRef.current = null;
+    }
+  }, []);
 
   // Control functions - SIMPLE VERSIONS
   const togglePlay = () => {
