@@ -11,50 +11,80 @@ const AdBanner = ({
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const timer = setTimeout(() => {
+    const loadAd = () => {
       try {
-        // Create a completely new div for the ad
-        const adDiv = document.createElement('div');
-        adDiv.id = `ad-${Date.now()}`; // Unique ID
-        adDiv.style.width = '100%';
-        adDiv.style.height = '100%';
-        
-        // Clear and set container
+        // Clear container first
         containerRef.current.innerHTML = '';
-        containerRef.current.appendChild(adDiv);
         
-        // Set up atOptions
-        window.atOptions = {
-          key: '1a2b80d70de8a64dc14a34eacacf0575',
-          format: 'iframe',
-          height: height,
-          width: width,
-          params: {}
-        };
-
-        // Load script
-        const script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.src = '//www.highperformanceformat.com/1a2b80d70de8a64dc14a34eacacf0575/invoke.js';
-        script.async = true;
-        script.onerror = () => setError(true);
+        // Create iframe for complete isolation
+        const iframe = document.createElement('iframe');
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.border = 'none';
+        iframe.sandbox = 'allow-scripts allow-same-origin'; // Restrict iframe capabilities
         
-        document.body.appendChild(script);
+        // Create iframe content with ad script
+        const iframeContent = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <style>
+              body { margin: 0; padding: 0; overflow: hidden; }
+            </style>
+          </head>
+          <body>
+            <script>
+              window.atOptions = {
+                key: '1a2b80d70de8a64dc14a34eacacf0575',
+                format: 'iframe',
+                height: ${height},
+                width: ${width},
+                params: {}
+              };
+            <\/script>
+            <script type="text/javascript" 
+                    src="//www.highperformanceformat.com/1a2b80d70de8a64dc14a34eacacf0575/invoke.js">
+            <\/script>
+          </body>
+          </html>
+        `;
         
-        // Cleanup
-        return () => {
-          if (document.body.contains(script)) {
-            document.body.removeChild(script);
+        // Write content to iframe
+        iframe.onload = () => {
+          try {
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            doc.open();
+            doc.write(iframeContent);
+            doc.close();
+          } catch (err) {
+            console.error('Error writing iframe content:', err);
+            setError('Advertisement failed to load');
           }
-          delete window.atOptions;
         };
+        
+        iframe.onerror = () => {
+          setError('Advertisement failed to load');
+        };
+        
+        containerRef.current.appendChild(iframe);
         
       } catch (err) {
-        setError(true);
+        setError('Error loading advertisement');
+        console.error('Ad loading error:', err);
       }
-    }, 1500); // Delay to ensure page stability
+    };
 
-    return () => clearTimeout(timer);
+    // Load with delay
+    const timer = setTimeout(() => {
+      loadAd();
+    }, 1000);
+
+    return () => {
+      clearTimeout(timer);
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '';
+      }
+    };
   }, [height, width]);
 
   return (
@@ -77,9 +107,10 @@ const AdBanner = ({
           <div style={{ 
             color: '#999', 
             fontSize: '12px', 
-            textAlign: 'center'
+            textAlign: 'center',
+            padding: '10px'
           }}>
-            Ad unavailable
+            Advertisement unavailable
           </div>
         )}
       </div>
