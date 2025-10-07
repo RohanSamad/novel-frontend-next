@@ -7,6 +7,7 @@ import AudioPlayer from "@/components/chapter/AudioPlayer";
 import ChapterNavigation from "@/components/chapter/ChapterNavigation";
 import ChapterSelector from "@/components/chapter/ChapterSelector";
 import { ArrowLeft, BookOpen, PlayCircle } from "lucide-react";
+import OptimizedAdRow from "@/components/adrows/OptimizedAdRow";
 
 interface ChapterPreferences {
   theme: "light" | "dark";
@@ -404,12 +405,8 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
           </div>
 
           {/* AD SLOT 2: Below Chapter Navigation (after audio player) */}
-          <AdSlot 
-            id="ad-slot-below-navigation-1" 
-            theme={preferences.theme}
-            className="mb-6"
-          />
-
+          <OptimizedAdRow/>
+		  
           {/* Chapter Text Content */}
           <div
             className={`prose max-w-none ${
