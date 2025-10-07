@@ -6,6 +6,7 @@ import { useAppSelector } from "@/hooks/redux";
 import AudioPlayer from "@/components/chapter/AudioPlayer";
 import ChapterNavigation from "@/components/chapter/ChapterNavigation";
 import ChapterSelector from "@/components/chapter/ChapterSelector";
+import AdBanner from '@/components/ads/AdBanner';
 import { ArrowLeft, BookOpen, PlayCircle } from "lucide-react";
 
 interface ChapterPreferences {
@@ -309,6 +310,9 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
         </div>
       </div>
 
+	  {/*Ad Slot 1*/}
+		<AdBanner/>
+	  
       {/* Chapter Content */}
       <div className="container mx-auto px-4 py-6">
         <div className="max-w-3xl mx-auto">
