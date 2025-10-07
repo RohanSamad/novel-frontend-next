@@ -1,13 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 
-// Define the props interface (if using TypeScript, otherwise just use PropTypes or JSDoc)
 const AdBanner = ({ 
   format = 'iframe', 
   height = 250, 
   width = 300,
-  className = '',
-  onError,
-  onSuccess
+  className = ''
 }) => {
   const containerRef = useRef(null);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -15,8 +12,6 @@ const AdBanner = ({
 
   useEffect(() => {
     if (!containerRef.current) return;
-
-    let scriptLoaded = false;
 
     // Clean up previous instances
     const cleanup = () => {
@@ -43,54 +38,35 @@ const AdBanner = ({
         script.type = 'text/javascript';
         script.src = '//www.highperformanceformat.com/1a2b80d70de8a64dc14a34eacacf0575/invoke.js';
         script.async = true;
-        script.setAttribute('data-ad-loaded', 'true');
         
         // Add error handling
         script.onerror = () => {
-          if (!scriptLoaded) {
-            setError('Failed to load advertisement');
-            setIsLoaded(false);
-            if (onError && typeof onError === 'function') onError();
-          }
+          setError('Failed to load advertisement');
+          setIsLoaded(false);
         };
 
         script.onload = () => {
-          scriptLoaded = true;
           setIsLoaded(true);
           setError(null);
-          if (onSuccess && typeof onSuccess === 'function') onSuccess();
         };
 
         document.body.appendChild(script);
 
-        // Timeout fallback
-        setTimeout(() => {
-          if (!scriptLoaded) {
-            setError('Advertisement timeout');
-            if (onError && typeof onError === 'function') onError();
-          }
-        }, 3000);
-
       } catch (err) {
         setError('Error loading advertisement');
-        if (onError && typeof onError === 'function') onError();
         console.error('Ad loading error:', err);
       }
     };
 
-    // Small delay to ensure DOM is ready
-    const timer = setTimeout(() => {
-      loadAd();
-    }, 100);
+    loadAd();
 
     return () => {
-      clearTimeout(timer);
       cleanup();
       if (window.atOptions) {
         delete window.atOptions;
       }
     };
-  }, [format, height, width, onError, onSuccess]);
+  }, [format, height, width]);
 
   return (
     <div className={className}>
