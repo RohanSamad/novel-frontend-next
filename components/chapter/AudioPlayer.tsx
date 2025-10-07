@@ -602,7 +602,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
               </button>
               
               {showSpeedMenu && (
-                <div className="absolute bottom-full right-0 mb-2 w-32 bg-white rounded-md shadow-lg py-1 z-10">
+                <div className="absolute top-full right-0 mt-2 w-32 bg-white rounded-md shadow-lg py-1 z-10">
                   {speedOptions.map((rate) => (
                     <button
                       key={rate}
