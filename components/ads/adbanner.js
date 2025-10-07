@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 
+// Define the props interface (if using TypeScript, otherwise just use PropTypes or JSDoc)
 const AdBanner = ({ 
   format = 'iframe', 
   height = 250, 
   width = 300,
   className = '',
-  onError,  // Make this optional
-  onSuccess // Make this optional
+  onError,
+  onSuccess
 }) => {
   const containerRef = useRef(null);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -44,7 +45,7 @@ const AdBanner = ({
         script.async = true;
         script.setAttribute('data-ad-loaded', 'true');
         
-        // Add error handling (check if callback exists before calling)
+        // Add error handling
         script.onerror = () => {
           if (!scriptLoaded) {
             setError('Failed to load advertisement');
