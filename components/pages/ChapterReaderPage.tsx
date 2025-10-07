@@ -310,9 +310,13 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
         </div>
       </div>
 
-	  {/*Ad Slot 1*/}
-		<AdBanner/>
-	  
+      {/* Ad Slot 1 - Centered */}
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex justify-center">
+          <AdBanner />
+        </div>
+      </div>
+      
       {/* Chapter Content */}
       <div className="container mx-auto px-4 py-6">
         <div className="max-w-3xl mx-auto">
