@@ -1,110 +1,91 @@
 import { useEffect, useRef, useState } from 'react';
 
 const AdBanner = ({ 
-  format = 'iframe', 
   height = 250, 
   width = 300,
   className = ''
 }) => {
   const containerRef = useRef(null);
-  const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const loadAd = async () => {
+    const loadAd = () => {
       try {
-        // Create a completely isolated container
-        const adContainer = document.createElement('div');
-        adContainer.style.width = '100%';
-        adContainer.style.height = '100%';
-        adContainer.style.position = 'relative';
-        
-        // Clear container
+        // Clear container first
         containerRef.current.innerHTML = '';
-        containerRef.current.appendChild(adContainer);
-
-        // Set up atOptions in a more isolated way
-        const adScriptContent = `
-          window.atOptions = {
-            key: '1a2b80d70de8a64dc14a34eacacf0575',
-            format: '${format}',
-            height: ${height},
-            width: ${width},
-            params: {}
-          };
-        `;
-
-        // Create script for atOptions
-        const optionsScript = document.createElement('script');
-        optionsScript.textContent = adScriptContent;
-        document.body.appendChild(optionsScript);
-
-        // Load the external script
-        const script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.src = '//www.highperformanceformat.com/1a2b80d70de8a64dc14a34eacacf0575/invoke.js';
-        script.async = true;
         
-        // Add error handling
-        script.onerror = () => {
-          setError('Failed to load advertisement');
-          setIsLoaded(false);
-          document.body.removeChild(optionsScript);
-        };
-
-        script.onload = () => {
-          setIsLoaded(true);
-          setError(null);
-          // Try to move ad content to our container
-          setTimeout(() => {
-            moveAdContent(adContainer);
-          }, 100);
-        };
-
-        document.body.appendChild(script);
-
-        // Cleanup function
-        return () => {
-          if (document.body.contains(optionsScript)) {
-            document.body.removeChild(optionsScript);
+        // Create iframe for complete isolation
+        const iframe = document.createElement('iframe');
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.border = 'none';
+        iframe.sandbox = 'allow-scripts allow-same-origin'; // Restrict iframe capabilities
+        
+        // Create iframe content with ad script
+        const iframeContent = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <style>
+              body { margin: 0; padding: 0; overflow: hidden; }
+            </style>
+          </head>
+          <body>
+            <script>
+              window.atOptions = {
+                key: '1a2b80d70de8a64dc14a34eacacf0575',
+                format: 'iframe',
+                height: ${height},
+                width: ${width},
+                params: {}
+              };
+            <\/script>
+            <script type="text/javascript" 
+                    src="//www.highperformanceformat.com/1a2b80d70de8a64dc14a34eacacf0575/invoke.js">
+            <\/script>
+          </body>
+          </html>
+        `;
+        
+        // Write content to iframe
+        iframe.onload = () => {
+          try {
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            doc.open();
+            doc.write(iframeContent);
+            doc.close();
+          } catch (err) {
+            console.error('Error writing iframe content:', err);
+            setError('Advertisement failed to load');
           }
-          if (document.body.contains(script)) {
-            document.body.removeChild(script);
-          }
         };
-
+        
+        iframe.onerror = () => {
+          setError('Advertisement failed to load');
+        };
+        
+        containerRef.current.appendChild(iframe);
+        
       } catch (err) {
         setError('Error loading advertisement');
         console.error('Ad loading error:', err);
       }
     };
 
-    // Function to move ad content to isolated container
-    const moveAdContent = (targetContainer) => {
-      // Look for recently added iframes that might be ads
-      const iframes = document.querySelectorAll('iframe:not([data-processed])');
-      iframes.forEach(iframe => {
-        if (iframe.src && iframe.src.includes('highperformanceformat')) {
-          iframe.setAttribute('data-processed', 'true');
-          if (targetContainer && !targetContainer.contains(iframe)) {
-            // Move iframe to our container
-            targetContainer.appendChild(iframe);
-          }
-        }
-      });
-    };
-
-    // Load ad with a delay to ensure page is stable
+    // Load with delay
     const timer = setTimeout(() => {
       loadAd();
-    }, 500);
+    }, 1000);
 
     return () => {
       clearTimeout(timer);
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '';
+      }
     };
-  }, [format, height, width]);
+  }, [height, width]);
 
   return (
     <div className={className}>
@@ -119,20 +100,9 @@ const AdBanner = ({
           alignItems: 'center',
           backgroundColor: '#f5f5f5',
           border: '1px dashed #ccc',
-          borderRadius: '4px',
-          overflow: 'hidden'
+          borderRadius: '4px'
         }}
       >
-        {!isLoaded && !error && (
-          <div style={{ 
-            color: '#666', 
-            fontSize: '12px', 
-            textAlign: 'center',
-            padding: '10px'
-          }}>
-            Loading advertisement...
-          </div>
-        )}
         {error && (
           <div style={{ 
             color: '#999', 
@@ -141,6 +111,100 @@ const AdBanner = ({
             padding: '10px'
           }}>
             Advertisement unavailable
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default AdBanner;
+Emergency Solution: Simple Fallback
+If you're still having issues, use this minimal approach that completely isolates the ad:
+
+// components/ads/adbanner.js
+import { useEffect, useRef, useState } from 'react';
+
+const AdBanner = ({ 
+  height = 250, 
+  width = 300,
+  className = ''
+}) => {
+  const containerRef = useRef(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const timer = setTimeout(() => {
+      try {
+        // Create a completely new div for the ad
+        const adDiv = document.createElement('div');
+        adDiv.id = `ad-${Date.now()}`; // Unique ID
+        adDiv.style.width = '100%';
+        adDiv.style.height = '100%';
+        
+        // Clear and set container
+        containerRef.current.innerHTML = '';
+        containerRef.current.appendChild(adDiv);
+        
+        // Set up atOptions
+        window.atOptions = {
+          key: '1a2b80d70de8a64dc14a34eacacf0575',
+          format: 'iframe',
+          height: height,
+          width: width,
+          params: {}
+        };
+
+        // Load script
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = '//www.highperformanceformat.com/1a2b80d70de8a64dc14a34eacacf0575/invoke.js';
+        script.async = true;
+        script.onerror = () => setError(true);
+        
+        document.body.appendChild(script);
+        
+        // Cleanup
+        return () => {
+          if (document.body.contains(script)) {
+            document.body.removeChild(script);
+          }
+          delete window.atOptions;
+        };
+        
+      } catch (err) {
+        setError(true);
+      }
+    }, 1500); // Delay to ensure page stability
+
+    return () => clearTimeout(timer);
+  }, [height, width]);
+
+  return (
+    <div className={className}>
+      <div
+        ref={containerRef}
+        style={{
+          height: `${height}px`,
+          width: `${width}px`,
+          minHeight: '50px',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: '#f5f5f5',
+          border: '1px dashed #ccc',
+          borderRadius: '4px'
+        }}
+      >
+        {error && (
+          <div style={{ 
+            color: '#999', 
+            fontSize: '12px', 
+            textAlign: 'center'
+          }}>
+            Ad unavailable
           </div>
         )}
       </div>
