@@ -4,42 +4,42 @@ const AdBanner = ({
   format = 'iframe', 
   height = 250, 
   width = 300,
-  className = '',
-  loadDelay = 2000 // Delay in milliseconds after component mounts
+  className = ''
 }) => {
   const containerRef = useRef(null);
-  const [shouldLoadAd, setShouldLoadAd] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(null);
 
-  // Load ad after component mounts and delay
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShouldLoadAd(true);
-    }, loadDelay);
-
-    return () => clearTimeout(timer);
-  }, [loadDelay]);
-
-  // Load the ad script when shouldLoadAd is true
-  useEffect(() => {
-    if (!shouldLoadAd || !containerRef.current) return;
+    if (!containerRef.current) return;
 
     const loadAd = async () => {
       try {
-        // Clean up previous instances
-        if (containerRef.current) {
-          containerRef.current.innerHTML = '';
-        }
+        // Create a completely isolated container
+        const adContainer = document.createElement('div');
+        adContainer.style.width = '100%';
+        adContainer.style.height = '100%';
+        adContainer.style.position = 'relative';
         
-        // Set up atOptions
-        window.atOptions = {
-          key: '1a2b80d70de8a64dc14a34eacacf0575',
-          format: format,
-          height: height,
-          width: width,
-          params: {}
-        };
+        // Clear container
+        containerRef.current.innerHTML = '';
+        containerRef.current.appendChild(adContainer);
+
+        // Set up atOptions in a more isolated way
+        const adScriptContent = `
+          window.atOptions = {
+            key: '1a2b80d70de8a64dc14a34eacacf0575',
+            format: '${format}',
+            height: ${height},
+            width: ${width},
+            params: {}
+          };
+        `;
+
+        // Create script for atOptions
+        const optionsScript = document.createElement('script');
+        optionsScript.textContent = adScriptContent;
+        document.body.appendChild(optionsScript);
 
         // Load the external script
         const script = document.createElement('script');
@@ -51,14 +51,29 @@ const AdBanner = ({
         script.onerror = () => {
           setError('Failed to load advertisement');
           setIsLoaded(false);
+          document.body.removeChild(optionsScript);
         };
 
         script.onload = () => {
           setIsLoaded(true);
           setError(null);
+          // Try to move ad content to our container
+          setTimeout(() => {
+            moveAdContent(adContainer);
+          }, 100);
         };
 
         document.body.appendChild(script);
+
+        // Cleanup function
+        return () => {
+          if (document.body.contains(optionsScript)) {
+            document.body.removeChild(optionsScript);
+          }
+          if (document.body.contains(script)) {
+            document.body.removeChild(script);
+          }
+        };
 
       } catch (err) {
         setError('Error loading advertisement');
@@ -66,15 +81,30 @@ const AdBanner = ({
       }
     };
 
-    loadAd();
+    // Function to move ad content to isolated container
+    const moveAdContent = (targetContainer) => {
+      // Look for recently added iframes that might be ads
+      const iframes = document.querySelectorAll('iframe:not([data-processed])');
+      iframes.forEach(iframe => {
+        if (iframe.src && iframe.src.includes('highperformanceformat')) {
+          iframe.setAttribute('data-processed', 'true');
+          if (targetContainer && !targetContainer.contains(iframe)) {
+            // Move iframe to our container
+            targetContainer.appendChild(iframe);
+          }
+        }
+      });
+    };
+
+    // Load ad with a delay to ensure page is stable
+    const timer = setTimeout(() => {
+      loadAd();
+    }, 500);
 
     return () => {
-      // Cleanup function
-      if (window.atOptions) {
-        delete window.atOptions;
-      }
+      clearTimeout(timer);
     };
-  }, [shouldLoadAd, format, height, width]);
+  }, [format, height, width]);
 
   return (
     <div className={className}>
@@ -89,20 +119,11 @@ const AdBanner = ({
           alignItems: 'center',
           backgroundColor: '#f5f5f5',
           border: '1px dashed #ccc',
-          borderRadius: '4px'
+          borderRadius: '4px',
+          overflow: 'hidden'
         }}
       >
-        {!shouldLoadAd && (
-          <div style={{ 
-            color: '#666', 
-            fontSize: '12px', 
-            textAlign: 'center',
-            padding: '10px'
-          }}>
-            Advertisement
-          </div>
-        )}
-        {shouldLoadAd && !isLoaded && !error && (
+        {!isLoaded && !error && (
           <div style={{ 
             color: '#666', 
             fontSize: '12px', 
