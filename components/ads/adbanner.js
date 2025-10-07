@@ -4,25 +4,33 @@ const AdBanner = ({
   format = 'iframe', 
   height = 250, 
   width = 300,
-  className = ''
+  className = '',
+  loadDelay = 2000 // Delay in milliseconds after component mounts
 }) => {
   const containerRef = useRef(null);
+  const [shouldLoadAd, setShouldLoadAd] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(null);
 
+  // Load ad after component mounts and delay
   useEffect(() => {
-    if (!containerRef.current) return;
+    const timer = setTimeout(() => {
+      setShouldLoadAd(true);
+    }, loadDelay);
 
-    // Clean up previous instances
-    const cleanup = () => {
-      if (containerRef.current) {
-        containerRef.current.innerHTML = '';
-      }
-    };
+    return () => clearTimeout(timer);
+  }, [loadDelay]);
+
+  // Load the ad script when shouldLoadAd is true
+  useEffect(() => {
+    if (!shouldLoadAd || !containerRef.current) return;
 
     const loadAd = async () => {
       try {
-        cleanup();
+        // Clean up previous instances
+        if (containerRef.current) {
+          containerRef.current.innerHTML = '';
+        }
         
         // Set up atOptions
         window.atOptions = {
@@ -61,12 +69,12 @@ const AdBanner = ({
     loadAd();
 
     return () => {
-      cleanup();
+      // Cleanup function
       if (window.atOptions) {
         delete window.atOptions;
       }
     };
-  }, [format, height, width]);
+  }, [shouldLoadAd, format, height, width]);
 
   return (
     <div className={className}>
@@ -84,7 +92,17 @@ const AdBanner = ({
           borderRadius: '4px'
         }}
       >
-        {!isLoaded && !error && (
+        {!shouldLoadAd && (
+          <div style={{ 
+            color: '#666', 
+            fontSize: '12px', 
+            textAlign: 'center',
+            padding: '10px'
+          }}>
+            Advertisement
+          </div>
+        )}
+        {shouldLoadAd && !isLoaded && !error && (
           <div style={{ 
             color: '#666', 
             fontSize: '12px', 

@@ -309,13 +309,6 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Ad Slot 1 - Centered */}
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex justify-center">
-          <AdBanner />
-        </div>
-      </div>
       
       {/* Chapter Content */}
       <div className="container mx-auto px-4 py-6">
@@ -367,6 +360,13 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
               onListClick={() => setIsChapterSelectorOpen(true)}
             />
           </div>
+
+{/* Ad Slot 1 - Centered with delayed loading */}
+<div className="container mx-auto px-4 py-4">
+  <div className="flex justify-center">
+    <AdBanner loadDelay={1500} /> {/* Load after 1.5 seconds */}
+  </div>
+</div>
 
           {/* Chapter Text Content */}
           <div
