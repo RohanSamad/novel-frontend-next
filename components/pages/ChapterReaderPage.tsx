@@ -361,10 +361,10 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
             />
           </div>
 
-{/* Ad Slot 1 - Centered with delayed loading */}
+{/* Ad Slot 1 - Centered */}
 <div className="container mx-auto px-4 py-4">
   <div className="flex justify-center">
-    <AdBanner loadDelay={1500} /> {/* Load after 1.5 seconds */}
+    <AdBanner /> {/* Remove loadDelay prop */}
   </div>
 </div>
 
