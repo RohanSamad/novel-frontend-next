@@ -47,7 +47,7 @@ const AdSlot: React.FC<{
   id: string;
   className?: string;
   theme?: "light" | "dark";
-}> = ({ id, className = ""}) => {
+}> = ({ id, className = "", theme }) => {
   useEffect(() => {
     // Initialize ad slot when component mounts
     const initAd = () => {
@@ -70,9 +70,12 @@ const AdSlot: React.FC<{
       id={id}
     >
       <div 
-        className={`min-h-[100px] w-full max-w-[728px] flex items-center justify-center rounded-lg`}
+        className={`min-h-[100px] w-full max-w-[728px] flex items-center justify-center rounded-lg ${
+          theme === "dark" ? "bg-gray-800" : "bg-gray-100"
+        }`}
       >
         {/* Placeholder content - remove this in production */}
+        <span className="text-sm text-gray-500">Advertisement</span>
       </div>
     </div>
   );
@@ -86,6 +89,10 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
   chapterId,
   slug,
 }) => {
+  // Add loading state
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
   const { userProgress } = useAppSelector((state) => state.progress);
   const { user } = useAppSelector((state) => state.auth);
   // Access global theme state from Redux
@@ -116,6 +123,20 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
   const [isChapterSelectorOpen, setIsChapterSelectorOpen] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
 
+  // Validate required data
+  useEffect(() => {
+    try {
+      if (!selectedNovel || !selectedChapter || !chapters?.length || !slug) {
+        setError("Missing required chapter data");
+        return;
+      }
+      setIsLoading(false);
+    } catch (err) {
+      setError("Error loading chapter data");
+      console.error("Data validation error:", err);
+    }
+  }, [selectedNovel, selectedChapter, chapters, slug]);
+
   // Sync local theme with global Redux theme
   useEffect(() => {
     setPreferences((prev) => ({
@@ -142,9 +163,23 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
 
   // Find next chapter for autoplay navigation
   const findNextChapter = useCallback(() => {
+    if (!chapters?.length || !chapterId) return null;
+    
+    // Try to find by chapter ID first, then by chapter number
     const currentIndex = chapters.findIndex(
-      (chapter) => chapter.chapter_number.toString() === chapterId
+      (chapter) => chapter.id === chapterId
     );
+    
+    // If not found by ID, try by chapter number
+    if (currentIndex === -1) {
+      const currentIndexByNumber = chapters.findIndex(
+        (chapter) => chapter.chapter_number.toString() === chapterId
+      );
+      
+      if (currentIndexByNumber >= 0 && currentIndexByNumber < chapters.length - 1) {
+        return chapters[currentIndexByNumber + 1];
+      }
+    }
     
     if (currentIndex >= 0 && currentIndex < chapters.length - 1) {
       return chapters[currentIndex + 1];
@@ -154,7 +189,7 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
 
   // Handle chapter end - navigate to next chapter if autoplay is enabled
   const handleChapterEnd = useCallback(() => {
-    if (!preferences.autoPlayEnabled) {
+    if (!preferences.autoPlayEnabled || !slug) {
       return;
     }
 
@@ -165,13 +200,14 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
 
     setIsNavigating(true);
 
-    // Use Next.js router for better performance, fallback to window.location
+    // Use Next.js router for better performance
     try {
-      const nextUrl = `/novel/${slug}/chapter/${nextChapter.chapter_number}`;
+      const nextUrl = `/novel/${encodeURIComponent(slug)}/chapter/${nextChapter.chapter_number}`;
       router.push(nextUrl);
     } catch (error) {
-      console.error("Router navigation failed, using window.location:", error);
-      window.location.href = `/novel/${slug}/chapter/${nextChapter.chapter_number}`;
+      console.error("Router navigation failed:", error);
+      setIsNavigating(false);
+      // Don't fallback to window.location to avoid full page reload
     }
   }, [preferences.autoPlayEnabled, findNextChapter, slug, router]);
 
@@ -202,6 +238,8 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
   };
 
   const formatChapterContent = (content: string) => {
+    if (!content) return "";
+    
     const paragraphs = content
       .split(/(?:<\/p>|<br\s*\/?\>|\n)/)
       .map((p) => p.trim())
@@ -231,9 +269,45 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
     }
   };
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="pt-16 min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !selectedNovel || !selectedChapter || !chapters?.length) {
+    return (
+      <div className="pt-16 min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center p-6 max-w-md">
+          <div className="text-red-500 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">Chapter Loading Error</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            {error || "Unable to load chapter content. Please try again later."}
+          </p>
+          <Link 
+            href={slug ? `/novel/${slug}` : "/"} 
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            {slug ? "Back to Novel" : "Back to Home"}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   // Get clean audio URL
-  const audioUrl = selectedChapter?.audio_url;
+  const audioUrl = selectedChapter?.audio_url || '';
   const hasValidAudio = isValidAudioUrl(audioUrl);
+  const content = selectedChapter?.content_text || '';
 
   return (
     <div
@@ -414,7 +488,7 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
             }`}
             style={{ fontSize: `${preferences.fontSize}px` }}
             dangerouslySetInnerHTML={{
-              __html: formatChapterContent(selectedChapter.content_text),
+              __html: formatChapterContent(content),
             }}
           />
 
