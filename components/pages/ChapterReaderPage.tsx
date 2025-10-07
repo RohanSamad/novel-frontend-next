@@ -6,7 +6,7 @@ import { useAppSelector } from "@/hooks/redux";
 import AudioPlayer from "@/components/chapter/AudioPlayer";
 import ChapterNavigation from "@/components/chapter/ChapterNavigation";
 import ChapterSelector from "@/components/chapter/ChapterSelector";
-import AdBanner from '@/components/ads/AdBanner';
+import AdBanner from '@/components/ads/adbanner';
 import { ArrowLeft, BookOpen, PlayCircle } from "lucide-react";
 
 interface ChapterPreferences {
