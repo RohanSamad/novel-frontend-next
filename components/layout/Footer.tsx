@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link';
 import { Mail } from 'lucide-react';
-import BookIcon from './logo/BookIcon'; // Updated import path
+import BookIcon from '@/components/logo/BookIcon'; // Updated import path
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();

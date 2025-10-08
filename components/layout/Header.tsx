@@ -16,7 +16,7 @@ import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { logout } from '../../store/slices/authSlice';
 import { toggleTheme } from '../../store/slices/themeSlice';
 import Button from '../ui/Button';
-import BookIcon from './logo/BookIcon'; // Updated import path
+import BookIcon from '@/components/logo/BookIcon'; // Updated import path
 
 const GenreOptions = [
   { value: 'action', label: 'Action' },
