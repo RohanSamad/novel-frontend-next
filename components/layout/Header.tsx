@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  BookOpen,
   Search,
   ChevronDown,
   User,
@@ -130,7 +129,7 @@ const Header: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <BookOpen className="h-8 w-8 text-white" />
+            <img src="/book-icon.svg" alt="Book Icon" className="h-8 w-8" />
             <span className="ml-2 text-xl font-serif font-bold text-white">
               Novel Tavern
             </span>
