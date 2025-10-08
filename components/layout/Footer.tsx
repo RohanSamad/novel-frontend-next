@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link';
 import { Mail } from 'lucide-react';
+import BookIcon from './logo/BookIcon'; // Updated import path
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -12,8 +13,7 @@ const Footer = () => {
           {/* Brand Section */}
           <div className="mb-8 md:mb-0">
             <div className="flex items-center">
-              {/* Replaced BookOpen with custom SVG */}
-              <img src="/book-icon.svg" alt="Book Icon" className="h-8 w-8" />
+              <BookIcon className="h-8 w-8" />
               <span className="ml-2 text-xl font-serif font-bold">Novel Tavern</span>
             </div>
             <p className="text-gray-300 text-sm mt-2">

@@ -16,6 +16,7 @@ import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { logout } from '../../store/slices/authSlice';
 import { toggleTheme } from '../../store/slices/themeSlice';
 import Button from '../ui/Button';
+import BookIcon from './logo/BookIcon'; // Updated import path
 
 const GenreOptions = [
   { value: 'action', label: 'Action' },
@@ -129,7 +130,7 @@ const Header: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <img src="/book-icon.svg" alt="Book Icon" className="h-8 w-8" />
+            <BookIcon className="h-8 w-8" />
             <span className="ml-2 text-xl font-serif font-bold text-white">
               Novel Tavern
             </span>
