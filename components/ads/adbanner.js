@@ -21,18 +21,41 @@ const AdBanner = ({
         iframe.style.width = '100%';
         iframe.style.height = '100%';
         iframe.style.border = 'none';
-        iframe.sandbox = 'allow-scripts allow-same-origin'; // Restrict iframe capabilities
+        iframe.style.display = 'block';
         
-        // Create iframe content with ad script
+        // Enhanced sandbox configuration for interactivity
+        iframe.sandbox = 'allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation allow-forms';
+        
+        // Create iframe content with ad script and interactive features
         const iframeContent = `
           <!DOCTYPE html>
           <html>
           <head>
+            <meta charset="utf-8">
             <style>
-              body { margin: 0; padding: 0; overflow: hidden; }
+              body { 
+                margin: 0; 
+                padding: 0; 
+                overflow: hidden;
+                cursor: pointer;
+              }
+              body:hover {
+                opacity: 0.95;
+              }
+              .ad-loading {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100%;
+                color: #666;
+                font-family: Arial, sans-serif;
+                font-size: 12px;
+                cursor: wait;
+              }
             </style>
           </head>
           <body>
+            <div class="ad-loading">Loading advertisement...</div>
             <script>
               window.atOptions = {
                 key: '1a2b80d70de8a64dc14a34eacacf0575',
@@ -100,7 +123,8 @@ const AdBanner = ({
           alignItems: 'center',
           backgroundColor: '#f5f5f5',
           border: '1px dashed #ccc',
-          borderRadius: '4px'
+          borderRadius: '4px',
+          overflow: 'hidden'
         }}
       >
         {error && (
@@ -108,7 +132,8 @@ const AdBanner = ({
             color: '#999', 
             fontSize: '12px', 
             textAlign: 'center',
-            padding: '10px'
+            padding: '10px',
+            width: '100%'
           }}>
             Advertisement unavailable
           </div>
