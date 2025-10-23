@@ -361,12 +361,12 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
             />
           </div>
 
-{/* Ad Slot 1 - Centered */}
-<div className="container mx-auto px-4 py-4">
-  <div className="flex justify-center">
-    <AdBanner /> {/* Remove loadDelay prop */}
-  </div>
-</div>
+          {/* Ad Slot 1 - Centered */}
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex justify-center">
+              <AdBanner /> {/* Remove loadDelay prop */}
+            </div>
+          </div>
 
           {/* Chapter Text Content */}
           <div
@@ -378,6 +378,13 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
               __html: formatChapterContent(selectedChapter.content_text),
             }}
           />
+
+          {/* Ad Slot 2 - Before Bottom Navigation */}
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex justify-center">
+              <AdBanner />
+            </div>
+          </div>
 
           {/* Bottom Chapter Navigation */}
           <div className="mt-12">
