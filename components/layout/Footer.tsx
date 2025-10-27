@@ -21,8 +21,9 @@ const Footer = () => {
             </p>
             {/* Discord Button */}
             <div className="mt-4">
+              <p className="text-gray-300 text-sm mb-2">Join us on:</p>
               <a 
-                href="https://discord.gg/gkJyWTYr" 
+                href="https://discord.gg/dnyKvD7N" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-[#5865F2] hover:bg-[#4752c4] transition-colors"
