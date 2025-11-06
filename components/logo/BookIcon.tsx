@@ -1,20 +1,32 @@
-import React from 'react';
+// components/logo/BookIcon.tsx
+'use client';
+
+import React, { useState } from 'react';
 
 const BookIcon = ({ className }: { className?: string }) => {
+  const [imageError, setImageError] = useState(false);
+
+  if (imageError) {
+    return (
+      <div className={className} style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        fontSize: '1.5rem'
+      }}>
+        📚
+      </div>
+    );
+  }
+
   return (
-    <div className={className} style={{ height: '32px', width: '32px' }}>
-      <iframe
-        src="/book-icon.svg"
-        sandbox="allow-scripts allow-same-origin"
+    <div className={className}>
+      <img 
+        src="/book-icon.svg" 
+        alt="Book Icon"
+        className="w-full h-full"
+        onError={() => setImageError(true)}
         loading="lazy"
-        scrolling="no"
-        style={{
-          border: 'none',
-          width: '100%',
-          height: '100%',
-          background: 'transparent',
-        }}
-        title="Book Icon"
       />
     </div>
   );
