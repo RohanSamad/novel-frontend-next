@@ -187,8 +187,9 @@ const HomePage: React.FC<HomePageProps> = ({
     const completedFiltered = displayNovels.filter(
       (novel) => novel.status?.toLowerCase() === 'completed'
     );
-    const completed = completedFiltered
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    // Shuffle completed novels randomly
+    const completed = [...completedFiltered]
+      .sort(() => Math.random() - 0.5)
       .slice(0, 10);
 
 
