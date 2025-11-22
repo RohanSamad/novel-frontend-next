@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { Clock } from "lucide-react";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { createSlug } from "@/lib/utils";
 
 interface RecentUpdatesProps {
   initialRecentChapters?: {
@@ -85,8 +86,7 @@ const RecentUpdates: React.FC<RecentUpdatesProps> = ({
               key={chapter.id}
               className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
               onClick={() => {
-                const slug = chapter.novel_title.trim().replace(/\s+/g, "-");
-                router.push(`/novel/${slug}/chapter/${chapter.chapter_number}`);
+                router.push(`/novel/${createSlug(chapter.novel_title)}/chapter/${chapter.chapter_number}`);
               }}
             >
               <td className="px-6 py-4 whitespace-nowrap">

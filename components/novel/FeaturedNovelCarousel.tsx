@@ -8,6 +8,7 @@ import Button from "../ui/Button";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import Image from "next/image";
 import { Novel } from "../../store/slices/novelsSlice";
+import { createSlug } from "../../lib/utils";
 
 interface FeaturedNovelCarouselProps {
   novels?: Novel[]; 
@@ -154,7 +155,7 @@ const FeaturedNovelCarousel: React.FC<FeaturedNovelCarouselProps> = ({
             <p className="text-white/80">by {currentNovel.author?.name || 'Unknown Author'}</p>
             <p className="line-clamp-3">{currentNovel.synopsis}</p>
             <Link
-              href={`/novel/${currentNovel.title.trim().replace(/\s+/g, "-")}`}
+              href={`/novel/${createSlug(currentNovel.title)}`}
             >
               <Button variant="accent" size="medium">
                 Read Now
