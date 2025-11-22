@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Settings } from 'lucide-react';
 import { useAppDispatch } from '../../hooks/redux';
 import { updateLocalProgress } from '../../store/slices/progressSlice';
 import { Howl, Howler } from 'howler';
@@ -15,6 +15,20 @@ interface AudioPlayerProps {
   onEnded?: () => void;
 }
 
+// At the top of your component, initialize volume state with saved value
+const getInitialVolume = (): number => {
+  if (typeof window !== 'undefined') {
+    const savedVolume = localStorage.getItem('audioVolume');
+    if (savedVolume !== null) {
+      const vol = parseFloat(savedVolume);
+      if (!isNaN(vol) && vol >= 0 && vol <= 1) {
+        return vol;
+      }
+    }
+  }
+  return 1.0; // Changed from 0.7 to 1.0
+};
+
 const AudioPlayer: React.FC<AudioPlayerProps> = ({
   audioUrl,
   initialPosition = 0,
@@ -27,10 +41,12 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(initialPosition);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(0.7);
+  const [volume, setVolume] = useState(getInitialVolume); // Use the function here
   const [isMuted, setIsMuted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1.0);
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   
   const soundRef = useRef<Howl | null>(null);
   const progressInterval = useRef<number | null>(null);
@@ -49,6 +65,29 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const currentChapterId = useRef(chapterId);
   
   const dispatch = useAppDispatch();
+
+  // Speed options
+  const speedOptions = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
+
+  // Simple cleanup function - MOVE THIS UP
+  const cleanup = useCallback(() => {
+    console.log('Cleaning up audio...');
+    
+    if (progressInterval.current) {
+      clearInterval(progressInterval.current);
+      progressInterval.current = null;
+    }
+    
+    if (soundRef.current) {
+      try {
+        soundRef.current.stop();
+        soundRef.current.unload();
+      } catch (e) {
+        console.warn('Cleanup error:', e);
+      }
+      soundRef.current = null;
+    }
+  }, []);
 
   // Update refs when props change - these won't cause reinitializations
   useEffect(() => {
@@ -75,25 +114,32 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     currentChapterId.current = chapterId;
   }, [chapterId]);
 
-  // Simple cleanup function
-  const cleanup = useCallback(() => {
-    console.log('Cleaning up audio...');
-    
-    if (progressInterval.current) {
-      clearInterval(progressInterval.current);
-      progressInterval.current = null;
-    }
-    
-    if (soundRef.current) {
-      try {
-        soundRef.current.stop();
-        soundRef.current.unload();
-      } catch (e) {
-        console.warn('Cleanup error:', e);
+  // Load saved playback rate from localStorage
+  useEffect(() => {
+    const savedRate = localStorage.getItem('audioPlaybackRate');
+    if (savedRate) {
+      const rate = parseFloat(savedRate);
+      if (!isNaN(rate) && speedOptions.includes(rate)) {
+        setPlaybackRate(rate);
       }
-      soundRef.current = null;
     }
   }, []);
+
+  // Save playback rate to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('audioPlaybackRate', playbackRate.toString());
+    
+    // Update playback rate on the sound instance if it exists
+    if (soundRef.current) {
+      soundRef.current.rate(playbackRate);
+    }
+  }, [playbackRate, speedOptions]);
+
+  // Simplified volume effects - save volume and update Howler whenever it changes
+  useEffect(() => {
+    localStorage.setItem('audioVolume', volume.toString());
+    Howler.volume(volume);
+  }, [volume]);
 
   // Save progress
   const saveProgress = useCallback(() => {
@@ -193,7 +239,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         src: [audioUrl],
         html5: true,
         preload: true,
-        volume: isMuted ? 0 : volume,
+        volume: isMuted ? 0 : volume, // This will now use the saved volume
+        rate: playbackRate, // Set initial playback rate
         
         onload: () => {
           console.log('Audio loaded, autoPlay:', currentAutoPlayState.current);
@@ -309,7 +356,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       setIsLoading(false);
       isInitializing.current = false;
     }
-  }, [audioUrl, volume, isMuted, cleanup, startProgressTracking, stopProgressTracking, attemptAutoPlay, dispatch, duration]); 
+  }, [audioUrl, volume, isMuted, cleanup, startProgressTracking, stopProgressTracking, attemptAutoPlay, dispatch, duration, playbackRate]); 
   // REMOVED all autoPlay and other prop dependencies
 
   // Initialize only when audioUrl changes - this is the key fix
@@ -424,6 +471,16 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     setCurrentTime(newTime);
   };
 
+  // Set playback speed
+  const setSpeed = (rate: number) => {
+    setPlaybackRate(rate);
+    setShowSpeedMenu(false);
+    
+    if (soundRef.current) {
+      soundRef.current.rate(rate);
+    }
+  };
+
   const formatTime = (time: number) => {
     if (!isFinite(time)) return '0:00';
     const minutes = Math.floor(time / 60);
@@ -533,6 +590,39 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           </div>
 
           <div className="flex items-center space-x-2">
+            {/* Speed control dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowSpeedMenu(!showSpeedMenu)}
+                disabled={isLoading || !!error}
+                className="text-gray-700 hover:text-primary-600 disabled:text-gray-400 flex items-center"
+              >
+                <Settings size={20} />
+                <span className="ml-1 text-sm">{playbackRate}x</span>
+              </button>
+              
+              {showSpeedMenu && (
+                <div className="absolute top-full right-0 mt-2 w-32 bg-white rounded-md shadow-lg py-1 z-10">
+                  {speedOptions.map((rate) => (
+                    <button
+                      key={rate}
+                      onClick={() => setSpeed(rate)}
+                      className={`block w-full text-left px-4 py-2 text-sm ${
+                        playbackRate === rate
+                          ? 'bg-primary-100 text-primary-700'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      {rate}x
+                      {playbackRate === rate && (
+                        <span className="ml-2">✓</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <button
               onClick={toggleMute}
               disabled={isLoading || !!error}

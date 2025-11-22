@@ -6,6 +6,7 @@ import { useAppSelector } from "@/hooks/redux";
 import AudioPlayer from "@/components/chapter/AudioPlayer";
 import ChapterNavigation from "@/components/chapter/ChapterNavigation";
 import ChapterSelector from "@/components/chapter/ChapterSelector";
+import AdBanner from '@/components/ads/adbanner';
 import { ArrowLeft, BookOpen, PlayCircle } from "lucide-react";
 
 interface ChapterPreferences {
@@ -40,42 +41,6 @@ interface ChapterReaderClientProps {
   chapterId: string;
   slug: string;
 }
-
-// Ad Slot Component
-const AdSlot: React.FC<{
-  id: string;
-  className?: string;
-  theme?: "light" | "dark";
-}> = ({ id, className = ""}) => {
-  useEffect(() => {
-    // Initialize ad slot when component mounts
-    const initAd = () => {
-      try {
-        // Your ad initialization logic here
-        // This is where you'd typically call your ad network's display function
-        console.log(`Initializing ad slot: ${id}`);
-      } catch (error) {
-        console.error(`Error initializing ad slot ${id}:`, error);
-      }
-    };
-
-    const timer = setTimeout(initAd, 100);
-    return () => clearTimeout(timer);
-  }, [id]);
-
-  return (
-    <div 
-      className={`w-full flex justify-center my-4 ${className}`}
-      id={id}
-    >
-      <div 
-        className={`min-h-[100px] w-full max-w-[728px] flex items-center justify-center rounded-lg`}
-      >
-        {/* Placeholder content - remove this in production */}
-      </div>
-    </div>
-  );
-};
 
 const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
   selectedNovel,
@@ -344,17 +309,10 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
           </div>
         </div>
       </div>
-
+      
       {/* Chapter Content */}
       <div className="container mx-auto px-4 py-6">
         <div className="max-w-3xl mx-auto">
-          {/* AD SLOT 1: Above Audio Player */}
-          <AdSlot 
-            id="ad-slot-above-audio" 
-            theme={preferences.theme}
-            className="mb-6"
-          />
-
           {/* Audio Player Section */}
           <div className="mb-6">
             {hasValidAudio ? (
@@ -403,12 +361,12 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
             />
           </div>
 
-          {/* AD SLOT 2: Below Chapter Navigation (after audio player) */}
-          <AdSlot 
-            id="ad-slot-below-navigation-1" 
-            theme={preferences.theme}
-            className="mb-6"
-          />
+          {/* Ad Slot 1 - Centered */}
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex justify-center">
+              <AdBanner /> {/* Remove loadDelay prop */}
+            </div>
+          </div>
 
           {/* Chapter Text Content */}
           <div
@@ -421,6 +379,13 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
             }}
           />
 
+          {/* Ad Slot 2 - Before Bottom Navigation */}
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex justify-center">
+              <AdBanner />
+            </div>
+          </div>
+
           {/* Bottom Chapter Navigation */}
           <div className="mt-12">
             <ChapterNavigation
@@ -430,13 +395,6 @@ const ChapterReaderClient: React.FC<ChapterReaderClientProps> = ({
               onListClick={() => setIsChapterSelectorOpen(true)}
             />
           </div>
-
-          {/* AD SLOT 3: Below Bottom Chapter Navigation */}
-          <AdSlot 
-            id="ad-slot-below-navigation-2" 
-            theme={preferences.theme}
-            className="mt-6"
-          />
         </div>
       </div>
 

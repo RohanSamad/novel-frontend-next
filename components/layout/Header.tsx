@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  BookOpen,
   Search,
   ChevronDown,
   User,
@@ -17,6 +16,7 @@ import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { logout } from '../../store/slices/authSlice';
 import { toggleTheme } from '../../store/slices/themeSlice';
 import Button from '../ui/Button';
+import BookIcon from '@/components/logo/BookIcon'; // Updated import path
 
 const GenreOptions = [
   { value: 'action', label: 'Action' },
@@ -130,7 +130,7 @@ const Header: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <BookOpen className="h-8 w-8 text-white" />
+            <BookIcon className="h-8 w-8" />
             <span className="ml-2 text-xl font-serif font-bold text-white">
               Novel Tavern
             </span>
