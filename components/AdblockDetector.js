@@ -1,41 +1,34 @@
 // components/AdblockDetector.js
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 
 const AdblockDetector = () => {
   const [isAdblockEnabled, setIsAdblockEnabled] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  const detectionRef = useRef({
-    scriptTest: null,
-    fetchTest: null,
-    visibilityTest: null,
-  });
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   useEffect(() => {
-    if (!isClient || typeof window === "undefined") return;
+    if (!isClient) return;
+
+    let scriptBlocked = false;
+    let fetchBlocked = false;
+    let visibilityBlocked = false;
 
     const runDetection = async () => {
-      const results = {
-        scriptBlocked: false,
-        fetchBlocked: false,
-        visibilityBlocked: false,
-      };
-
       // Test 1: Fake ad script
       const scriptTest = new Promise((resolve) => {
         const script = document.createElement("script");
         script.src = "/ads.js";
         script.onload = () => {
-          results.scriptBlocked = false;
+          scriptBlocked = false;
           resolve();
         };
         script.onerror = () => {
-          results.scriptBlocked = true;
+          scriptBlocked = true;
           resolve();
         };
         document.head.appendChild(script);
@@ -55,16 +48,16 @@ const AdblockDetector = () => {
           mode: "no-cors",
         })
           .then(() => {
-            results.fetchBlocked = false;
+            fetchBlocked = false;
             resolve();
           })
           .catch(() => {
-            results.fetchBlocked = true;
+            fetchBlocked = true;
             resolve();
           });
       });
 
-      // Test 3: Create hidden ad element and check if it's hidden
+      // Test 3: Visibility check
       const visibilityTest = new Promise((resolve) => {
         const adElement = document.createElement("div");
         adElement.innerHTML = "&nbsp;";
@@ -72,9 +65,8 @@ const AdblockDetector = () => {
         adElement.style.height = "1px";
         document.body.appendChild(adElement);
 
-        // Check if it's hidden (adblockers often hide .adsbox)
-        const isHidden = adElement.offsetHeight === 0;
-        results.visibilityBlocked = isHidden;
+        // Check if hidden
+        visibilityBlocked = adElement.offsetHeight === 0;
 
         // Cleanup
         setTimeout(() => {
@@ -89,18 +81,11 @@ const AdblockDetector = () => {
       // Run all tests with timeout
       await Promise.race([
         Promise.all([scriptTest, fetchTest, visibilityTest]),
-        new Promise((resolve) => setTimeout(resolve, 3000)), // 3s timeout
+        new Promise((resolve) => setTimeout(resolve, 3000)),
       ]);
 
-      // If any test indicates blocking, assume adblocker
-      const isBlocked =
-        results.scriptBlocked ||
-        results.fetchBlocked ||
-        results.visibilityBlocked;
-
-      console.log("Adblock Detection Results:", results);
-
-      if (isBlocked) {
+      // If any test indicates blocking
+      if (scriptBlocked || fetchBlocked || visibilityBlocked) {
         console.log("✅ Adblock detected!");
         setIsAdblockEnabled(true);
       } else {
