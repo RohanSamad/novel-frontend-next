@@ -96,6 +96,16 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       const blocked = await detectAdblock();
       setIsAdblockDetected(blocked);
       setIsCheckingAdblock(false);
+      
+      // NEW: If adblock detected, stop any playing audio immediately
+      if (blocked && soundRef.current) {
+        try {
+          soundRef.current.stop();
+          setIsPlaying(false);
+        } catch (e) {
+          console.warn('Error stopping audio due to adblock:', e);
+        }
+      }
     };
     
     checkAdblock();
@@ -112,7 +122,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     
     if (soundRef.current) {
       try {
-        soundRef.current.stop();
+        soundRef.current.stop(); // NEW: Always stop before unloading
         soundRef.current.unload();
       } catch (e) {
         console.warn('Cleanup error:', e);
@@ -210,8 +220,14 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     }
   }, []);
 
-  // Auto play function
+  // Auto play function - NEW: Check for adblock before autoplay
   const attemptAutoPlay = useCallback(() => {
+    // NEW: Don't autoplay if adblock is detected
+    if (isAdblockDetected) {
+      console.log('Autoplay blocked due to adblock detection');
+      return;
+    }
+    
     if (!soundRef.current || !currentAutoPlayState.current || autoPlayExecuted.current) return;
 
     try {
@@ -231,10 +247,17 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     } catch (err) {
       console.log('Autoplay attempt failed:', err);
     }
-  }, []);
+  }, [isAdblockDetected]); // NEW: Added dependency
 
-  // Initialize audio
+  // Initialize audio - NEW: Check for adblock before initializing
   const initializeAudio = useCallback(() => {
+    // NEW: Don't initialize if adblock is detected
+    if (isAdblockDetected) {
+      console.log('Audio initialization blocked due to adblock detection');
+      setIsLoading(false);
+      return;
+    }
+    
     // Prevent multiple initializations
     if (!audioUrl || 
         isInitializing.current || 
@@ -290,8 +313,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             setCurrentTime(currentInitialPosition.current);
           }
 
-          // Attempt autoplay after a short delay
-          if (currentAutoPlayState.current && !autoPlayExecuted.current) {
+          // Attempt autoplay after a short delay - NEW: Only if no adblock
+          if (currentAutoPlayState.current && !autoPlayExecuted.current && !isAdblockDetected) {
             setTimeout(() => {
               attemptAutoPlay();
             }, 100);
@@ -385,9 +408,9 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       setIsLoading(false);
       isInitializing.current = false;
     }
-  }, [audioUrl, volume, isMuted, cleanup, startProgressTracking, stopProgressTracking, attemptAutoPlay, dispatch, duration, playbackRate]); 
+  }, [audioUrl, volume, isMuted, cleanup, startProgressTracking, stopProgressTracking, attemptAutoPlay, dispatch, duration, playbackRate, isAdblockDetected]); 
 
-  // Initialize only when audioUrl changes
+  // Initialize only when audioUrl changes - NEW: Also recheck when adblock status changes
   useEffect(() => {
     // Reset state when URL changes
     lastInitializedUrl.current = '';
@@ -402,7 +425,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       
       return () => clearTimeout(timer);
     }
-  }, [audioUrl]);
+  }, [audioUrl, isAdblockDetected]); // NEW: Added isAdblockDetected as dependency
 
   // Progress saving interval
   useEffect(() => {
@@ -434,7 +457,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     };
   }, [cleanup]);
 
-  // Control functions
+  // Control functions - NEW: Check for adblock before any action
   const togglePlay = () => {
     if (!soundRef.current || isLoading || error || isAdblockDetected) return;
     
