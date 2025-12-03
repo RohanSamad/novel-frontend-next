@@ -2,35 +2,52 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import FuckAdBlock from "fuckadblock";
+
+let FuckAdBlock;
 
 const AdblockDetector = () => {
   const [isAdblockEnabled, setIsAdblockEnabled] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const fuckAdBlock = new FuckAdBlock();
+    setIsClient(true); // Now we're on the client
+  }, []);
 
-        fuckAdBlock.on(true, () => {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const initAdBlockDetection = async () => {
+      try {
+        if (!FuckAdBlock) {
+          const module = await import("fuckadblock");
+          FuckAdBlock = module.default;
+        }
+
+        const adBlock = new FuckAdBlock();
+
+        adBlock.on(true, () => {
           console.log("Adblock detected!");
           setIsAdblockEnabled(true);
         });
 
-        fuckAdBlock.on(false, () => {
+        adBlock.on(false, () => {
           console.log("No adblock detected.");
           setIsAdblockEnabled(false);
         });
 
-        fuckAdBlock.check();
+        adBlock.check();
       } catch (err) {
         console.error("Error initializing FuckAdBlock:", err);
         setIsAdblockEnabled(false);
       }
-    }
-  }, []);
+    };
 
-  if (!isAdblockEnabled) return null;
+    if (isClient) {
+      initAdBlockDetection();
+    }
+  }, [isClient]);
+
+  if (!isClient || !isAdblockEnabled) return null;
 
   return (
     <div className="fixed inset-0 z-[9999] bg-black bg-opacity-80 flex items-center justify-center">
