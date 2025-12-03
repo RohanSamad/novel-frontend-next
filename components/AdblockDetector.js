@@ -19,8 +19,8 @@ const AdblockDetector = () => {
     const initAdBlockDetection = async () => {
       try {
         if (!FuckAdBlock) {
-          const module = await import("fuckadblock");
-          FuckAdBlock = module.default;
+          const fuckAdBlockModule = await import("fuckadblock");
+          FuckAdBlock = fuckAdBlockModule.default;
         }
 
         const adBlock = new FuckAdBlock();
