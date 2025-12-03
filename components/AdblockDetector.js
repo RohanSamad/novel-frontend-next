@@ -14,69 +14,57 @@ const AdblockDetector = () => {
   useEffect(() => {
     if (typeof window === "undefined" || !isClient) return;
 
-    let adsterraLoaded = false;
-    let fallbackLoaded = false;
+    let adsterraFailed = false;
+    let fallbackFailed = false;
 
-    const checkComplete = () => {
-      if (adsterraLoaded && fallbackLoaded) {
-        // Both checks completed
-        if (!window.adsterraSuccess && !window.fallbackSuccess) {
-          console.log("Adblock detected via both methods.");
-          setIsAdblockEnabled(true);
-        } else {
-          console.log("No adblock detected.");
-          setIsAdblockEnabled(false);
-        }
+    const checkAdblock = async () => {
+      // Test 1: Adsterra script (fetch)
+      try {
+        const response = await fetch(
+          "https://www.highperformanceformat.com/1a2b80d70de8a64dc14a34eacacf0575/invoke.js",
+          { method: "HEAD", mode: "no-cors" }
+        );
+        // If fetch succeeds, it doesn't mean it's not blocked.
+        // We can't detect from response due to CORS, so we'll assume it's okay unless error.
+        adsterraFailed = false;
+      } catch (err) {
+        adsterraFailed = true;
+      }
+
+      // Test 2: Local fallback script
+      const script = document.createElement("script");
+      script.src = "/ads.js";
+
+      const fallbackPromise = new Promise((resolve) => {
+        script.onload = () => {
+          fallbackFailed = false;
+          resolve();
+        };
+        script.onerror = () => {
+          fallbackFailed = true;
+          resolve();
+        };
+        document.head.appendChild(script);
+      });
+
+      await fallbackPromise;
+
+      // Cleanup
+      if (document.head.contains(script)) {
+        document.head.removeChild(script);
+      }
+
+      // If both fail, adblock is likely active
+      if (adsterraFailed && fallbackFailed) {
+        console.log("Adblock detected!");
+        setIsAdblockEnabled(true);
+      } else {
+        console.log("No adblock detected.");
+        setIsAdblockEnabled(false);
       }
     };
 
-    // Method 1: Try loading Adsterra script
-    const testAdsterra = () => {
-      const img = new Image();
-      img.onload = () => {
-        window.adsterraSuccess = true;
-        adsterraLoaded = true;
-        checkComplete();
-      };
-      img.onerror = () => {
-        window.adsterraSuccess = false;
-        adsterraLoaded = true;
-        checkComplete();
-      };
-      img.src = 'https://www.highperformanceformat.com/1a2b80d70de8a64dc14a34eacacf0575/invoke.js';
-    };
-
-    // Method 2: Try loading local fallback script
-    const testFallback = () => {
-      const script = document.createElement("script");
-      script.src = "/ads.js";
-      script.onload = () => {
-        window.fallbackSuccess = true;
-        fallbackLoaded = true;
-        checkComplete();
-      };
-      script.onerror = () => {
-        window.fallbackSuccess = false;
-        fallbackLoaded = true;
-        checkComplete();
-      };
-      document.head.appendChild(script);
-
-      // Cleanup
-      return () => {
-        if (document.head.contains(script)) {
-          document.head.removeChild(script);
-        }
-      };
-    };
-
-    // Start both tests
-    testAdsterra();
-    const cleanup = testFallback();
-
-    return () => {
-      cleanup?.();
-    };
+    checkAdblock();
   }, [isClient]);
 
   if (!isClient || !isAdblockEnabled) return null;
