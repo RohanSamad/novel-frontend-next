@@ -12,57 +12,23 @@ const AdblockDetector = () => {
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !isClient) return;
+    if (!isClient) return;
 
-    let adsterraFailed = false;
-    let fallbackFailed = false;
+    const script = document.createElement("script");
+    script.src = "/ads.js";
+    script.onload = () => {
+      setIsAdblockEnabled(false);
+    };
+    script.onerror = () => {
+      setIsAdblockEnabled(true);
+    };
+    document.head.appendChild(script);
 
-    const checkAdblock = async () => {
-      // Test 1: Adsterra script (fetch)
-      try {
-        await fetch(
-          "https://www.highperformanceformat.com/1a2b80d70de8a64dc14a34eacacf0575/invoke.js",
-          { method: "HEAD", mode: "no-cors" }
-        );
-        adsterraFailed = false;
-      } catch {
-        adsterraFailed = true;
-      }
-
-      // Test 2: Local fallback script
-      const script = document.createElement("script");
-      script.src = "/ads.js";
-
-      const fallbackPromise = new Promise((resolve) => {
-        script.onload = () => {
-          fallbackFailed = false;
-          resolve();
-        };
-        script.onerror = () => {
-          fallbackFailed = true;
-          resolve();
-        };
-        document.head.appendChild(script);
-      });
-
-      await fallbackPromise;
-
-      // Cleanup
+    return () => {
       if (document.head.contains(script)) {
         document.head.removeChild(script);
       }
-
-      // If both fail, adblock is likely active
-      if (adsterraFailed && fallbackFailed) {
-        console.log("Adblock detected!");
-        setIsAdblockEnabled(true);
-      } else {
-        console.log("No adblock detected.");
-        setIsAdblockEnabled(false);
-      }
     };
-
-    checkAdblock();
   }, [isClient]);
 
   if (!isClient || !isAdblockEnabled) return null;
