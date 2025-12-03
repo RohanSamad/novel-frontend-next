@@ -3,48 +3,80 @@
 
 import { useEffect, useState } from "react";
 
-let FuckAdBlock;
-
 const AdblockDetector = () => {
   const [isAdblockEnabled, setIsAdblockEnabled] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setIsClient(true); // Now we're on the client
+    setIsClient(true);
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || !isClient) return;
 
-    const initAdBlockDetection = async () => {
-      try {
-        if (!FuckAdBlock) {
-          const fuckAdBlockModule = await import("fuckadblock");
-          FuckAdBlock = fuckAdBlockModule.default;
-        }
+    let adsterraLoaded = false;
+    let fallbackLoaded = false;
 
-        const adBlock = new FuckAdBlock();
-
-        adBlock.on(true, () => {
-          console.log("Adblock detected!");
+    const checkComplete = () => {
+      if (adsterraLoaded && fallbackLoaded) {
+        // Both checks completed
+        if (!window.adsterraSuccess && !window.fallbackSuccess) {
+          console.log("Adblock detected via both methods.");
           setIsAdblockEnabled(true);
-        });
-
-        adBlock.on(false, () => {
+        } else {
           console.log("No adblock detected.");
           setIsAdblockEnabled(false);
-        });
-
-        adBlock.check();
-      } catch (err) {
-        console.error("Error initializing FuckAdBlock:", err);
-        setIsAdblockEnabled(false);
+        }
       }
     };
 
-    if (isClient) {
-      initAdBlockDetection();
-    }
+    // Method 1: Try loading Adsterra script
+    const testAdsterra = () => {
+      const img = new Image();
+      img.onload = () => {
+        window.adsterraSuccess = true;
+        adsterraLoaded = true;
+        checkComplete();
+      };
+      img.onerror = () => {
+        window.adsterraSuccess = false;
+        adsterraLoaded = true;
+        checkComplete();
+      };
+      img.src = 'https://www.highperformanceformat.com/1a2b80d70de8a64dc14a34eacacf0575/invoke.js';
+    };
+
+    // Method 2: Try loading local fallback script
+    const testFallback = () => {
+      const script = document.createElement("script");
+      script.src = "/ads.js";
+      script.onload = () => {
+        window.fallbackSuccess = true;
+        fallbackLoaded = true;
+        checkComplete();
+      };
+      script.onerror = () => {
+        window.fallbackSuccess = false;
+        fallbackLoaded = true;
+        checkComplete();
+      };
+      document.head.appendChild(script);
+
+      // Cleanup
+      return () => {
+        if (document.head.contains(script)) {
+          document.head.removeChild(script);
+        }
+      };
+    };
+
+    // Start both tests
+    testAdsterra();
+    const cleanup = testFallback();
+
+    return () => {
+      cleanup?.();
+    };
   }, [isClient]);
 
   if (!isClient || !isAdblockEnabled) return null;
