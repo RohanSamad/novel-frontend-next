@@ -20,14 +20,12 @@ const AdblockDetector = () => {
     const checkAdblock = async () => {
       // Test 1: Adsterra script (fetch)
       try {
-        const response = await fetch(
+        await fetch(
           "https://www.highperformanceformat.com/1a2b80d70de8a64dc14a34eacacf0575/invoke.js",
           { method: "HEAD", mode: "no-cors" }
         );
-        // If fetch succeeds, it doesn't mean it's not blocked.
-        // We can't detect from response due to CORS, so we'll assume it's okay unless error.
         adsterraFailed = false;
-      } catch (err) {
+      } catch {
         adsterraFailed = true;
       }
 
