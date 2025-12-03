@@ -154,8 +154,8 @@ const AdblockDetector = () => {
         <div className="mt-4 text-xs text-gray-500">
           <p className="font-medium mb-1">How to whitelist:</p>
           <p>1. Click your adblocker icon</p>
-          <p>2. Select "Disable on this site" or "Allow"</p>
-          <p>3. Click "Check Again" above</p>
+          <p>2. Select &quot;Disable on this site&quot; or &quot;Allow&quot;</p>
+          <p>3. Click &quot;Check Again&quot; above</p>
         </div>
       </div>
     </div>
