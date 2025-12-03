@@ -1,7 +1,7 @@
 // components/AdblockDetector.js
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useAdblockDetection } from "@/hooks/useAdblockDetection";
 
 const AdblockDetector = () => {

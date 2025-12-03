@@ -5,7 +5,7 @@ import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Settings } from '
 import { useAppDispatch } from '../../hooks/redux';
 import { updateLocalProgress } from '../../store/slices/progressSlice';
 import { Howl, Howler } from 'howler';
-import { useAdblockDetection } from '@/hooks/useAdblockDetection'; // NEW
+import { useAdblockDetection } from '@/hooks/useAdblockDetection';
 
 interface AudioPlayerProps {
   audioUrl: string;
@@ -224,7 +224,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     } catch (err) {
       console.log('Autoplay attempt failed:', err);
     }
-  }, [isAdblockDetected]); // NEW: Dependency on adblock status
+  }, [isAdblockDetected]);
 
   // Initialize audio - BLOCK if adblock detected
   const initializeAudio = useCallback(() => {
@@ -342,14 +342,14 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           }
         },
         
-        onloaderror: (id: number, error: unknown) => {
+        onloaderror: () => {
           if (!isMounted.current) return;
           setError('Failed to load audio');
           setIsLoading(false);
           isInitializing.current = false;
         },
         
-        onplayerror: (id: number, error: unknown) => {
+        onplayerror: () => {
           if (!isMounted.current) return;
           if (!autoPlayExecuted.current && currentAutoPlayState.current) {
             console.log('Autoplay failed - this is normal browser behavior');
@@ -389,7 +389,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       
       return () => clearTimeout(timer);
     }
-  }, [audioUrl, isAdblockDetected]); // NEW: Re-initialize when adblock status changes
+  }, [audioUrl, isAdblockDetected]);
 
   // Progress saving interval
   useEffect(() => {
