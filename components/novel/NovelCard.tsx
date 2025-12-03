@@ -4,6 +4,7 @@ import { Novel } from "../../store/slices/novelsSlice";
 import { BookOpen, Clock, AlertCircle, Check} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { createSlug } from "../../lib/utils";
 
 
 interface NovelCardProps {
@@ -153,7 +154,7 @@ const NovelCard: React.FC<NovelCardProps> = ({
   }
 
   return (
-    <Link href={`/novel/${novel.title.trim().replace(/\s+/g, "-")}`}>
+    <Link href={`/novel/${createSlug(novel.title)}`}>
       <CardContent />
     </Link>
   );

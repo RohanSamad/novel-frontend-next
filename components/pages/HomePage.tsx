@@ -8,6 +8,7 @@ import LoadingSpinner from "../ui/LoadingSpinner";
 import NovelCard from "../novel/NovelCard";
 import { Novel, Chapter } from "../../store/slices/novelsSlice";
 import Link from "next/link";
+import { createSlug } from "../../lib/utils";
 
 const FeaturedNovelCarousel = dynamic(
   () => import("../novel/FeaturedNovelCarousel"),
@@ -39,21 +40,6 @@ const NovelGrid = memo(({ novels }: { novels: Novel[] }) => (
 
 NovelGrid.displayName = "NovelGrid";
 
-// Helper function to create URL-friendly slug from title
-const createSlug = (title: string) => {
-  if (!title || typeof title !== 'string') {
-    return 'untitled-novel';
-  }
-  
-  const slug = title
-    .replace(/[^a-zA-Z0-9\s]+/g, '') // Remove special chars but keep spaces and preserve case
-    .trim()
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
-    .replace(/(^-|-$)/g, ''); // Remove leading/trailing hyphens
-  
-  // If slug is empty after processing, return a default
-  return slug || 'untitled-novel';
-};
 
 const HotNovelsGrid = memo(({ novels }: { novels: Novel[] }) => {
   if (novels.length === 0) return null;
@@ -201,8 +187,9 @@ const HomePage: React.FC<HomePageProps> = ({
     const completedFiltered = displayNovels.filter(
       (novel) => novel.status?.toLowerCase() === 'completed'
     );
-    const completed = completedFiltered
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    // Shuffle completed novels randomly
+    const completed = [...completedFiltered]
+      .sort(() => Math.random() - 0.5)
       .slice(0, 10);
 
 
