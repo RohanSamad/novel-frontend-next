@@ -1,4 +1,3 @@
-// components/AdblockDetector.js
 "use client";
 
 import { useEffect, useState } from "react";
@@ -11,19 +10,24 @@ const AdblockDetector = () => {
       try {
         const { default: FuckAdBlock } = await import("fuckadblock");
 
-        const fuckAdBlock = new FuckAdBlock();
-        fuckAdBlock.on(true, () => {
-          setIsAdblockEnabled(true);
-        });
+        if (typeof window !== "undefined") {
+          const fuckAdBlock = new FuckAdBlock();
 
-        fuckAdBlock.on(false, () => {
-          setIsAdblockEnabled(false);
-        });
+          fuckAdBlock.on(true, () => {
+            console.log("Adblock detected!");
+            setIsAdblockEnabled(true);
+          });
 
-        fuckAdBlock.check();
+          fuckAdBlock.on(false, () => {
+            console.log("No adblock detected.");
+            setIsAdblockEnabled(false);
+          });
+
+          fuckAdBlock.check();
+        }
       } catch (err) {
         console.error("Error initializing FuckAdBlock:", err);
-        setIsAdblockEnabled(true); // Fallback in case of error
+        setIsAdblockEnabled(false); // Assume no adblocker on error
       }
     };
 
